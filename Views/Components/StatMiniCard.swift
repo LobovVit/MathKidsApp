@@ -11,6 +11,7 @@ struct StatMiniCard: View {
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .background(

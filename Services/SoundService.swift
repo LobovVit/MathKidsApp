@@ -1,6 +1,6 @@
+import Combine
 import Foundation
 import AVFoundation
-import Combine
 
 final class SoundService {
     static let shared = SoundService()
@@ -16,9 +16,7 @@ final class SoundService {
     }
 
     private func makePlayer(named: String, ext: String) -> AVAudioPlayer? {
-        guard let url = Bundle.main.url(forResource: named, withExtension: ext) else {
-            return nil
-        }
+        guard let url = Bundle.main.url(forResource: named, withExtension: ext) else { return nil }
         return try? AVAudioPlayer(contentsOf: url)
     }
 
@@ -37,3 +35,4 @@ final class SoundService {
         rewardPlayer?.play()
     }
 }
+

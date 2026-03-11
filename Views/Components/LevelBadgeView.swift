@@ -11,6 +11,6 @@ struct LevelBadgeView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Capsule().fill(Color.white.opacity(0.65)))
+        .background(Capsule().fill(Color.white.opacity(0.72)))
     }
 }

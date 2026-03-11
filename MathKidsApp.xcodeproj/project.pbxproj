@@ -11,8 +11,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		98C443DE2F61832300BACB04 /* MathKidsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = MathKidsApp.app; path = /Users/lobov/Development/pet/MathKidsApp/build/Debug/MathKidsApp.app; sourceTree = "<absolute>"; };
 		98C444082F61850900BACB04 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		98C445112F619CF800BACB04 /* MathKidsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MathKidsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +69,7 @@
 				98C444BB2F6185C800BACB04 /* Services */,
 				98C444C92F6185DD00BACB04 /* Resources */,
 				98C444E82F6185EA00BACB04 /* Models */,
+				98C445112F619CF800BACB04 /* MathKidsApp.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,7 +100,7 @@
 			packageProductDependencies = (
 			);
 			productName = MathKidsApp;
-			productReference = 98C443DE2F61832300BACB04 /* MathKidsApp.app */;
+			productReference = 98C445112F619CF800BACB04 /* MathKidsApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

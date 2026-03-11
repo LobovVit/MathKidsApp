@@ -7,26 +7,23 @@ struct NumberPadAnswerView: View {
     var body: some View {
         VStack(spacing: 16) {
             TextField("Ответ", text: $answerText)
-                #if os(iOS)
+#if os(iOS)
                 .keyboardType(.numberPad)
-                #endif
+#endif
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .multilineTextAlignment(.center)
                 .font(.system(size: 32, weight: .bold))
                 .frame(maxWidth: 240)
 
-            Button(action: submitAction) {
-                Text("Ответить")
-                    .font(.headline)
-                    .frame(maxWidth: 240)
-                    .padding(.vertical, 12)
-            }
-            .foregroundColor(.white)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray.opacity(0.5) : Color.accentColor)
-            )
-            .disabled(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button("Ответить", action: submitAction)
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.accentColor)
+                .cornerRadius(12)
+                .opacity(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                .disabled(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 }

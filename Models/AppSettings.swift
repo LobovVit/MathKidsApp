@@ -6,4 +6,5 @@ struct AppSettings: Codable {
     var answerMode: AnswerMode = .multipleChoice
     var soundEnabled: Bool = true
     var animationsEnabled: Bool = true
+    var iCloudSyncEnabled: Bool = true
 }

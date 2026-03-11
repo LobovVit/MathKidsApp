@@ -20,7 +20,7 @@ struct ChoiceAnswerView: View {
                         .frame(maxWidth: .infinity, minHeight: 90)
                         .background(
                             RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.white.opacity(0.75))
+                                .fill(Color.white.opacity(0.78))
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -29,3 +29,4 @@ struct ChoiceAnswerView: View {
         .padding(.horizontal)
     }
 }
+

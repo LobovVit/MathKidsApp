@@ -3,11 +3,7 @@ import SwiftUI
 struct KidBackgroundView: View {
     var body: some View {
         LinearGradient(
-            gradient: Gradient(colors: [
-                Color.blue.opacity(0.15),
-                Color.pink.opacity(0.12),
-                Color.yellow.opacity(0.10)
-            ]),
+            gradient: Gradient(colors: [Color.blue.opacity(0.18), Color.pink.opacity(0.12), Color.yellow.opacity(0.12)]),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -19,9 +15,7 @@ struct KidBackgroundView: View {
                     Text("🌈").font(.system(size: 44))
                 }
                 .padding()
-
                 Spacer()
-
                 HStack {
                     Text("⭐️").font(.system(size: 30))
                     Spacer()

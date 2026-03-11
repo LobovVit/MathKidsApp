@@ -4,12 +4,23 @@ struct TrainingView: View {
     @StateObject var viewModel: TrainingViewModel
     @EnvironmentObject var statsStore: StatsStore
     @EnvironmentObject var settingsStore: SettingsStore
+    @EnvironmentObject var router: AppRouter
 
     @State private var showResult = false
     @State private var sessionResult: SessionResult?
 
     var body: some View {
         ZStack {
+            HStack {
+                Button("← Назад") {
+                    router.goHome()
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            
             KidBackgroundView()
 
             VStack(spacing: 24) {
@@ -36,27 +47,32 @@ struct TrainingView: View {
                         .padding(.horizontal)
 
                     if viewModel.answerMode == .input {
-                        NumberPadAnswerView(
-                            answerText: $viewModel.answerText,
-                            submitAction: {
-                                viewModel.submitTextAnswer(soundEnabled: settingsStore.settings.soundEnabled)
-                                finishIfNeeded()
-                            }
-                        )
+                        NumberPadAnswerView(answerText: $viewModel.answerText) {
+                            viewModel.submitTextAnswer(
+                                soundEnabled: settingsStore.settings.soundEnabled,
+                                animationsEnabled: settingsStore.settings.animationsEnabled
+                            )
+                            finishIfNeeded()
+                        }
                     } else {
-                        ChoiceAnswerView(
-                            options: task.options,
-                            chooseAction: { value in
-                                viewModel.submitChoiceAnswer(value, soundEnabled: settingsStore.settings.soundEnabled)
-                                finishIfNeeded()
-                            }
-                        )
+                        ChoiceAnswerView(options: task.options) { value in
+                            viewModel.submitChoiceAnswer(
+                                value,
+                                soundEnabled: settingsStore.settings.soundEnabled,
+                                animationsEnabled: settingsStore.settings.animationsEnabled
+                            )
+                            finishIfNeeded()
+                        }
                     }
 
                     Spacer()
                 }
             }
             .padding()
+
+            if viewModel.showConfetti {
+                ConfettiView()
+            }
         }
         .navigationTitle(viewModel.operation.title)
         .sheet(isPresented: $showResult) {
@@ -70,12 +86,8 @@ struct TrainingView: View {
         if viewModel.finished {
             let result = viewModel.buildResult()
             sessionResult = result
-            statsStore.add(result: result)
-
-            if settingsStore.settings.soundEnabled {
-                SoundService.shared.playReward()
-            }
-
+            statsStore.add(result: result, syncEnabled: settingsStore.settings.iCloudSyncEnabled)
+            if settingsStore.settings.soundEnabled { SoundService.shared.playReward() }
             showResult = true
         }
     }

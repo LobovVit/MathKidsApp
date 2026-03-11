@@ -10,15 +10,11 @@ struct ProgressHeaderView: View {
             HStack {
                 Text("Пример \(progressText)")
                     .font(.headline)
-
                 Spacer()
-
                 Text("Серия: \(streak) 🔥")
                     .font(.headline)
             }
-
             ProgressView(value: progressValue)
-                .tint(.blue)
         }
         .padding(.horizontal)
     }

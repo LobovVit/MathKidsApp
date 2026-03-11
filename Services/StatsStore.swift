@@ -5,52 +5,56 @@ import SwiftUI
 final class StatsStore: ObservableObject {
     @Published private(set) var results: [SessionResult] = []
 
-    private let key = "mathkid.v3.results"
+    private let key = "mathkids.v4.results"
 
     init() {
-        load()
-    }
-
-    func add(result: SessionResult) {
-        results.insert(result, at: 0)
-        save()
-    }
-
-    func clearAll() {
-        results.removeAll()
-        save()
-    }
-
-    func totalSolved(for operation: MathOperation? = nil) -> Int {
-        filtered(operation).reduce(0) { $0 + $1.totalQuestions }
-    }
-
-    func totalCorrect(for operation: MathOperation? = nil) -> Int {
-        filtered(operation).reduce(0) { $0 + $1.correctAnswers }
-    }
-
-    func accuracy(for operation: MathOperation? = nil) -> Double {
-        let total = totalSolved(for: operation)
-        guard total > 0 else { return 0 }
-        return Double(totalCorrect(for: operation)) / Double(total)
-    }
-
-    private func filtered(_ operation: MathOperation?) -> [SessionResult] {
-        guard let operation else { return results }
-        return results.filter { $0.operation == operation }
-    }
-
-    private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode([SessionResult].self, from: data) else {
-            results = []
-            return
+        if let localData = UserDefaults.standard.data(forKey: key),
+           let decoded = try? JSONDecoder().decode([SessionResult].self, from: localData) {
+            results = decoded
+        } else if let cloud: [SessionResult] = ICloudKeyValueSync.shared.pull([SessionResult].self, forKey: key) {
+            results = cloud
         }
-        results = decoded
     }
 
-    private func save() {
+    func add(result: SessionResult, syncEnabled: Bool) {
+        results.insert(result, at: 0)
+        save(syncEnabled: syncEnabled)
+    }
+
+    func clearAll(syncEnabled: Bool) {
+        results.removeAll()
+        save(syncEnabled: syncEnabled)
+    }
+
+    func totalSolved(for childID: UUID? = nil, operation: MathOperation? = nil) -> Int {
+        filtered(childID: childID, operation: operation).reduce(0) { $0 + $1.totalQuestions }
+    }
+
+    func totalCorrect(for childID: UUID? = nil, operation: MathOperation? = nil) -> Int {
+        filtered(childID: childID, operation: operation).reduce(0) { $0 + $1.correctAnswers }
+    }
+
+    func accuracy(for childID: UUID? = nil, operation: MathOperation? = nil) -> Double {
+        let total = totalSolved(for: childID, operation: operation)
+        guard total > 0 else { return 0 }
+        return Double(totalCorrect(for: childID, operation: operation)) / Double(total)
+    }
+
+    func results(for childID: UUID) -> [SessionResult] {
+        results.filter { $0.childID == childID }
+    }
+
+    private func filtered(childID: UUID?, operation: MathOperation?) -> [SessionResult] {
+        results.filter { result in
+            let childOK = childID == nil || result.childID == childID
+            let opOK = operation == nil || result.operation == operation
+            return childOK && opOK
+        }
+    }
+
+    private func save(syncEnabled: Bool) {
         guard let data = try? JSONEncoder().encode(results) else { return }
         UserDefaults.standard.set(data, forKey: key)
+        ICloudKeyValueSync.shared.push(results, forKey: key, enabled: syncEnabled)
     }
 }

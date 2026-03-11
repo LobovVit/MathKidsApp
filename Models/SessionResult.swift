@@ -3,6 +3,7 @@ import Foundation
 struct SessionResult: Identifiable, Codable {
     let id: UUID
     let date: Date
+    let childID: UUID
     let childName: String
     let operation: MathOperation
     let difficulty: DifficultyLevel
@@ -15,6 +16,7 @@ struct SessionResult: Identifiable, Codable {
     init(
         id: UUID = UUID(),
         date: Date = Date(),
+        childID: UUID,
         childName: String,
         operation: MathOperation,
         difficulty: DifficultyLevel,
@@ -26,6 +28,7 @@ struct SessionResult: Identifiable, Codable {
     ) {
         self.id = id
         self.date = date
+        self.childID = childID
         self.childName = childName
         self.operation = operation
         self.difficulty = difficulty
