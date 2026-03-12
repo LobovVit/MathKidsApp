@@ -1,10 +1,3 @@
 import Foundation
 
-struct AppSettings: Codable {
-    var divisionOnlyIntegers: Bool = true
-    var allowNegativeSubtraction: Bool = false
-    var answerMode: AnswerMode = .multipleChoice
-    var soundEnabled: Bool = true
-    var animationsEnabled: Bool = true
-    var iCloudSyncEnabled: Bool = true
-}
+struct AppSettings: Codable { var divisionOnlyIntegers = true; var allowNegativeSubtraction = false; var answerMode: AnswerMode = .multipleChoice; var soundEnabled = true; var animationsEnabled = true; var iCloudSyncEnabled = true }

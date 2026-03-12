@@ -1,46 +1,18 @@
-//
-//  AppRouter.swift
-//  MathKidsApp
-//
-//  Created by Lobov Vitaliy on 11.03.2026.
-//
-
-import Combine
 import Foundation
-import SwiftUI
+import Combine
 
 final class AppRouter: ObservableObject {
     @Published var route: AppRoute = .home
 
-    func goHome() {
-        route = .home
-    }
-
-    func goToOperations() {
-        route = .operationSelection
-    }
-
-    func goToTraining(_ operation: MathOperation) {
-        route = .training(operation: operation)
-    }
-
-    func goToProfiles() {
-        route = .childProfiles
-    }
-
-    func goToParentGate() {
-        route = .parentGate
-    }
-
-    func goToParentDashboard() {
-        route = .parentDashboard
-    }
-
-    func goToSettings() {
-        route = .settings
-    }
-
-    func goToChildProfile() {
-        route = .childProfile
-    }
+    func goHome() { route = .home }
+    func goToOperations() { route = .operationSelection }
+    func goToTraining(_ operation: MathOperation) { route = .training(operation) }
+    func goToProfiles() { route = .profiles }
+    func goToChildProfile() { route = .childProfile }
+    func goToParentGate() { route = .parentGate }
+    func goToParentDashboard() { route = .parentDashboard }
+    func goToRewardGamePicker() { route = .rewardGamePicker }
+    func goToRewardGame() { route = .rewardGame }
+    func goToRaceGame() { route = .raceGame }
+    func goToSettings() { route = .settings }
 }

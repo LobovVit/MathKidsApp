@@ -1,29 +1,3 @@
 import SwiftUI
 
-struct ConfettiView: View {
-    @State private var animate = false
-    private let emojis = ["🎉", "✨", "⭐️", "🎈", "🌟", "🎊"]
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                ForEach(0..<16, id: \.self) { index in
-                    Text(emojis[index % emojis.count])
-                        .font(.system(size: CGFloat(Int.random(in: 20...34))))
-                        .position(
-                            x: CGFloat((index + 1) * Int(geo.size.width / 18)),
-                            y: animate ? geo.size.height + 40 : -20
-                        )
-                        .rotationEffect(.degrees(animate ? 180 : 0))
-                        .animation(
-                            .easeIn(duration: Double.random(in: 0.8...1.6))
-                                .delay(Double(index) * 0.03),
-                            value: animate
-                        )
-                }
-            }
-            .onAppear { animate = true }
-        }
-        .allowsHitTesting(false)
-    }
-}
+struct ConfettiView: View { @State private var animate = false; private let emojis = ["🎉","✨","⭐️","🎈","🌟","🎊"]; var body: some View { GeometryReader { geo in ZStack { ForEach(0..<16, id: \.self) { index in Text(emojis[index % emojis.count]).font(.system(size: CGFloat(Int.random(in: 20...34)))).position(x: CGFloat((index + 1) * Int(max(20, geo.size.width / 18))), y: animate ? geo.size.height + 40 : -20).rotationEffect(.degrees(animate ? 180 : 0)).animation(.easeIn(duration: Double.random(in: 0.8...1.6)).delay(Double(index) * 0.03), value: animate) } }.onAppear { animate = true } }.allowsHitTesting(false) } }

@@ -1,44 +1,49 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var router: AppRouter
-    @EnvironmentObject var settingsStore: SettingsStore
-    @EnvironmentObject var profileStore: ProfileStore
+    @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var settingsStore: SettingsStore
+    @EnvironmentObject private var profileStore: ProfileStore
+
+    @ViewBuilder
+    private var currentScreen: some View {
+        switch router.route {
+        case .home:
+            HomeView()
+        case .operationSelection:
+            OperationSelectionView()
+        case .training(let operation):
+            TrainingView(
+                viewModel: TrainingViewModel(
+                    operation: operation,
+                    settings: settingsStore.settings,
+                    childProfile: profileStore.profile
+                )
+            )
+        case .profiles:
+            ProfilesView()
+        case .childProfile:
+            ChildProfileView()
+        case .parentGate:
+            ParentPinGateView()
+        case .parentDashboard:
+            ParentDashboardView()
+        case .rewardGamePicker:
+            RewardGamePickerView()
+        case .rewardGame:
+            RewardGameView()
+        case .raceGame:
+            RaceGameView()
+        case .settings:
+            SettingsView()
+        }
+    }
 
     var body: some View {
-        ZStack {
-            switch router.route {
-            case .home:
-                HomeView()
-
-            case .operationSelection:
-                OperationSelectionView()
-
-            case .training(let operation):
-                TrainingView(
-                    viewModel: TrainingViewModel(
-                        operation: operation,
-                        settings: settingsStore.settings,
-                        childProfile: profileStore.profile
-                    )
-                )
-
-            case .childProfiles:
-                ProfilesView()
-
-            case .parentGate:
-                ParentGateView()
-
-            case .parentDashboard:
-                ParentDashboardView()
-
-            case .settings:
-                SettingsView()
-
-            case .childProfile:
-                ChildProfileView(profileID: profileStore.selectedProfileID)
+        currentScreen
+            .frame(minWidth: 320, minHeight: 480)
+            .onAppear {
+                settingsStore.loadFromICloudIfNeeded()
             }
-        }
-        .frame(minWidth: 900, minHeight: 650)
     }
 }

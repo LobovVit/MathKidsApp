@@ -1,10 +1,8 @@
-import Combine
 import Foundation
 import AVFoundation
 
 final class SoundService {
     static let shared = SoundService()
-
     private var correctPlayer: AVAudioPlayer?
     private var wrongPlayer: AVAudioPlayer?
     private var rewardPlayer: AVAudioPlayer?
@@ -20,19 +18,7 @@ final class SoundService {
         return try? AVAudioPlayer(contentsOf: url)
     }
 
-    func playCorrect() {
-        correctPlayer?.currentTime = 0
-        correctPlayer?.play()
-    }
-
-    func playWrong() {
-        wrongPlayer?.currentTime = 0
-        wrongPlayer?.play()
-    }
-
-    func playReward() {
-        rewardPlayer?.currentTime = 0
-        rewardPlayer?.play()
-    }
+    func playCorrect() { correctPlayer?.currentTime = 0; correctPlayer?.play() }
+    func playWrong() { wrongPlayer?.currentTime = 0; wrongPlayer?.play() }
+    func playReward() { rewardPlayer?.currentTime = 0; rewardPlayer?.play() }
 }
-

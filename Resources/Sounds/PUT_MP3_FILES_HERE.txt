@@ -1,0 +1,7 @@
+Add these files to your Xcode target resources:
+- correct.mp3
+- wrong.mp3
+- reward.mp3
+/Users/lobov/Downloads/reward.mp3
+/Users/lobov/Downloads/wrong.mp3
+/Users/lobov/Downloads/correct.mp3

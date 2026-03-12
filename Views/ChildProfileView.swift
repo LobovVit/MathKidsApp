@@ -1,65 +1,79 @@
 import SwiftUI
 
 struct ChildProfileView: View {
-    @EnvironmentObject var profilesStore: ProfilesStore
-    let profileID: UUID
-
-    private let avatars = ["🦊", "🐼", "🐸", "🐱", "🦁", "🐵", "🐻", "🐨"]
+    @EnvironmentObject private var profileStore: ProfileStore
+    private let avatars = ["🦊", "🐼", "🐸", "🐱", "🦁", "🐵"]
 
     var body: some View {
-        Form {
-            if let binding = bindingForProfile() {
-                Section {
-                    TextField("Имя", text: binding.name)
-                    Stepper("Возраст: \(binding.age.wrappedValue)", value: binding.age, in: 4...12)
-                    Picker("Уровень", selection: binding.selectedLevel) {
-                        ForEach(DifficultyLevel.allCases) { level in
-                            Text("\(level.emoji) \(level.title)").tag(level)
-                        }
-                    }
-                    Toggle("Сделать активным", isOn: Binding(
-                        get: { profilesStore.selectedProfileID == profileID },
-                        set: { value in if value { profilesStore.selectedProfileID = profileID } }
-                    ))
-                } header: {
-                    Text("Профиль")
-                }
+        ZStack {
+            KidBackgroundView()
 
-                Section {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 12) {
-                        ForEach(avatars, id: \.self) { avatar in
-                            Button {
-                                binding.avatar.wrappedValue = avatar
-                            } label: {
-                                Text(avatar)
-                                    .font(.system(size: 34))
-                                    .frame(width: 56, height: 56)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(binding.avatar.wrappedValue == avatar ? Color.blue.opacity(0.2) : Color.secondary.opacity(0.08))
-                                    )
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
+            VStack(spacing: 14) {
+                HeaderBackView(title: "Профиль ребёнка")
+
+                Form {
+                    Section("Профиль") {
+                        TextField("Имя", text: nameBinding)
+
+                        Stepper(
+                            "Возраст: \(profileStore.profile.age)",
+                            value: ageBinding,
+                            in: 4...12
+                        )
                     }
-                    .padding(.vertical, 8)
-                } header: {
-                    Text("Аватар")
+
+                    Section("Аватар") {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 12) {
+                            ForEach(avatars, id: \.self) { avatar in
+                                Button {
+                                    profileStore.profile.avatar = avatar
+                                } label: {
+                                    Text(avatar)
+                                        .font(.system(size: 34))
+                                        .frame(width: 56, height: 56)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(profileStore.profile.avatar == avatar ? Color.blue.opacity(0.2) : Color.secondary.opacity(0.08))
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+
+                    Section("Уровень") {
+                        Picker("Сложность", selection: levelBinding) {
+                            ForEach(DifficultyLevel.allCases) { level in
+                                Text("\(level.emoji) \(level.title)")
+                                    .tag(level)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
                 }
-            } else {
-                Text("Профиль не найден")
             }
         }
-        .navigationTitle("Профиль ребёнка")
     }
 
-    private func bindingForProfile() -> (name: Binding<String>, age: Binding<Int>, avatar: Binding<String>, selectedLevel: Binding<DifficultyLevel>)? {
-        guard let index = profilesStore.profiles.firstIndex(where: { $0.id == profileID }) else { return nil }
-        return (
-            name: $profilesStore.profiles[index].name,
-            age: $profilesStore.profiles[index].age,
-            avatar: $profilesStore.profiles[index].avatar,
-            selectedLevel: $profilesStore.profiles[index].selectedLevel
+    private var nameBinding: Binding<String> {
+        Binding(
+            get: { profileStore.profile.name },
+            set: { profileStore.profile.name = $0 }
+        )
+    }
+
+    private var ageBinding: Binding<Int> {
+        Binding(
+            get: { profileStore.profile.age },
+            set: { profileStore.profile.age = $0 }
+        )
+    }
+
+    private var levelBinding: Binding<DifficultyLevel> {
+        Binding(
+            get: { profileStore.profile.selectedLevel },
+            set: { profileStore.profile.selectedLevel = $0 }
         )
     }
 }

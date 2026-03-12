@@ -1,11 +1,12 @@
 import SwiftUI
 
 @main
-struct MathKidApp: App {
+struct MathKidsApp: App {
     @StateObject private var settingsStore = SettingsStore()
     @StateObject private var statsStore = StatsStore()
     @StateObject private var profileStore = ProfileStore()
     @StateObject private var router = AppRouter()
+    @StateObject private var parentAuthStore = ParentAuthStore()
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,7 @@ struct MathKidApp: App {
                 .environmentObject(statsStore)
                 .environmentObject(profileStore)
                 .environmentObject(router)
+                .environmentObject(parentAuthStore)
         }
     }
 }

@@ -1,41 +1,5 @@
-//
-//  SimpleBarChartView.swift
-//  MathKidsApp
-//
-//  Created by Lobov Vitaliy on 11.03.2026.
-//
-
 import SwiftUI
 
-struct SimpleBarChartView: View {
-    let points: [ProgressPoint]
+struct SimpleBarChartItem: Identifiable { let id = UUID(); let title: String; let value: Double }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Прогресс по занятиям")
-                .font(.title3.bold())
-
-            HStack(alignment: .bottom, spacing: 10) {
-                ForEach(points) { point in
-                    VStack(spacing: 8) {
-                        Text("\(Int(point.value))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.blue.opacity(0.7))
-                            .frame(width: 28, height: max(8, point.value * 1.6))
-                        Text(point.label)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 220, alignment: .bottomLeading)
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.72))
-        )
-    }
-}
+struct SimpleBarChartView: View { let items: [SimpleBarChartItem]; let maxValue: Double; var body: some View { VStack(alignment: .leading, spacing: 12) { ForEach(items) { item in VStack(alignment: .leading, spacing: 6) { HStack { Text(item.title).font(.subheadline); Spacer(); Text("\(Int(item.value))%").font(.subheadline.bold()) }; GeometryReader { geo in ZStack(alignment: .leading) { RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.12)).frame(height: 22); RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.8)).frame(width: barWidth(totalWidth: geo.size.width, value: item.value), height: 22) } }.frame(height: 22) } } } }; private func barWidth(totalWidth: CGFloat, value: Double) -> CGFloat { guard maxValue > 0 else { return 0 }; return totalWidth * CGFloat(value / maxValue) } }

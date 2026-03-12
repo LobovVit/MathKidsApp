@@ -1,34 +1,19 @@
-//
-//  ParentAuthStore.swift
-//  MathKidsApp
-//
-//  Created by Lobov Vitaliy on 11.03.2026.
-//
-
 import Foundation
 import Combine
-import SwiftUI
 
 final class ParentAuthStore: ObservableObject {
-    @Published var pinCode: String {
-        didSet { UserDefaults.standard.set(pinCode, forKey: key) }
-    }
-
+    @Published var pinCode: String { didSet { UserDefaults.standard.set(pinCode, forKey: key) } }
+    @Published var enteredPin: String = ""
     @Published var isUnlocked: Bool = false
+    @Published var errorMessage: String?
+    private let key = "mathkids.parent.pin"
 
-    private let key = "mathkids.v4.parent.pin"
+    init() { pinCode = UserDefaults.standard.string(forKey: key) ?? "0000" }
 
-    init() {
-        pinCode = UserDefaults.standard.string(forKey: key) ?? "1234"
+    func unlock() {
+        if enteredPin == pinCode { isUnlocked = true; errorMessage = nil; enteredPin = "" }
+        else { errorMessage = "Неверный PIN" }
     }
-
-    func unlock(with attempt: String) -> Bool {
-        let success = attempt == pinCode
-        isUnlocked = success
-        return success
-    }
-
-    func lock() {
-        isUnlocked = false
-    }
+    func lock() { isUnlocked = false; enteredPin = "" }
+    func updatePin(to newPin: String) { guard newPin.count == 4, newPin.allSatisfy({ $0.isNumber }) else { return }; pinCode = newPin }
 }

@@ -1,12 +1,8 @@
 import Foundation
 
 enum DifficultyLevel: String, CaseIterable, Codable, Identifiable {
-    case easy
-    case medium
-    case hard
-
+    case easy, medium, hard
     var id: String { rawValue }
-
     var title: String {
         switch self {
         case .easy: return "Лёгкий"
@@ -14,7 +10,6 @@ enum DifficultyLevel: String, CaseIterable, Codable, Identifiable {
         case .hard: return "Сложный"
         }
     }
-
     var emoji: String {
         switch self {
         case .easy: return "🌱"
@@ -22,7 +17,6 @@ enum DifficultyLevel: String, CaseIterable, Codable, Identifiable {
         case .hard: return "🏆"
         }
     }
-
     var maxNumber: Int {
         switch self {
         case .easy: return 10
@@ -30,7 +24,6 @@ enum DifficultyLevel: String, CaseIterable, Codable, Identifiable {
         case .hard: return 100
         }
     }
-
     var questionsCount: Int {
         switch self {
         case .easy: return 8

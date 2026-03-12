@@ -1,30 +1,26 @@
-import Combine
 import Foundation
-import SwiftUI
+import Combine
 
 final class SettingsStore: ObservableObject {
-    @Published var settings: AppSettings {
-        didSet {
-            save()
-            ICloudKeyValueSync.shared.push(settings, forKey: key, enabled: settings.iCloudSyncEnabled)
-        }
-    }
-
-    private let key = "mathkids.v4.settings"
+    @Published var settings: AppSettings { didSet { save() } }
+    private let key = "mathkids.settings"
 
     init() {
-        if let localData = UserDefaults.standard.data(forKey: key),
-           let decoded = try? JSONDecoder().decode(AppSettings.self, from: localData) {
+        if let data = UserDefaults.standard.data(forKey: key),
+           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
             settings = decoded
-        } else if let cloud: AppSettings = ICloudKeyValueSync.shared.pull(AppSettings.self, forKey: key) {
-            settings = cloud
-        } else {
-            settings = AppSettings()
-        }
+        } else { settings = AppSettings() }
     }
 
     private func save() {
         guard let data = try? JSONEncoder().encode(settings) else { return }
         UserDefaults.standard.set(data, forKey: key)
+        if settings.iCloudSyncEnabled { ICloudKeyValueSync.shared.set(settings, forKey: key) }
+    }
+
+    func loadFromICloudIfNeeded() {
+        guard settings.iCloudSyncEnabled,
+              let cloud: AppSettings = ICloudKeyValueSync.shared.get(AppSettings.self, forKey: key) else { return }
+        settings = cloud
     }
 }

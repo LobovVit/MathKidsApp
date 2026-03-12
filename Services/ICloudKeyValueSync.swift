@@ -1,27 +1,18 @@
-//
-//  ICloudKeyValueSync.swift
-//  MathKidsApp
-//
-//  Created by Lobov Vitaliy on 11.03.2026.
-//
-
 import Foundation
 
 final class ICloudKeyValueSync {
     static let shared = ICloudKeyValueSync()
     private let store = NSUbiquitousKeyValueStore.default
-
     private init() {}
 
-    func push<T: Encodable>(_ value: T, forKey key: String, enabled: Bool) {
-        guard enabled else { return }
+    func set<DataType: Codable>(_ value: DataType, forKey key: String) {
         guard let data = try? JSONEncoder().encode(value) else { return }
         store.set(data, forKey: key)
         store.synchronize()
     }
 
-    func pull<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
+    func get<DataType: Codable>(_ type: DataType.Type, forKey key: String) -> DataType? {
         guard let data = store.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: data)
+        return try? JSONDecoder().decode(type, from: data)
     }
 }

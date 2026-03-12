@@ -8,14 +8,7 @@ struct TaskItem: Identifiable, Codable {
     let correctAnswer: Int
     let options: [Int]
 
-    init(
-        id: UUID = UUID(),
-        left: Int,
-        right: Int,
-        operation: MathOperation,
-        correctAnswer: Int,
-        options: [Int] = []
-    ) {
+    init(id: UUID = UUID(), left: Int, right: Int, operation: MathOperation, correctAnswer: Int, options: [Int] = []) {
         self.id = id
         self.left = left
         self.right = right
@@ -24,7 +17,5 @@ struct TaskItem: Identifiable, Codable {
         self.options = options
     }
 
-    var questionText: String {
-        "\(left) \(operation.symbol) \(right)"
-    }
+    var questionText: String { "\(left) \(operation.symbol) \(right)" }
 }

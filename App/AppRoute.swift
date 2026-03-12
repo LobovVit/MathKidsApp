@@ -1,20 +1,15 @@
-//
-//  AppRoute.swift
-//  MathKidsApp
-//
-//  Created by Lobov Vitaliy on 11.03.2026.
-//
-
 import Foundation
 
 enum AppRoute: Equatable {
     case home
     case operationSelection
-    case training(operation: MathOperation)
-    case childProfiles
+    case training(MathOperation)
+    case profiles
+    case childProfile
     case parentGate
     case parentDashboard
+    case rewardGamePicker
+    case rewardGame
+    case raceGame
     case settings
-    case childProfile
 }
-

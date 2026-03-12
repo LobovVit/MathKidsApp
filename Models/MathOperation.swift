@@ -1,11 +1,7 @@
 import Foundation
 
 enum MathOperation: String, CaseIterable, Codable, Identifiable {
-    case addition
-    case subtraction
-    case multiplication
-    case division
-
+    case addition, subtraction, multiplication, division
     var id: String { rawValue }
 
     var title: String {

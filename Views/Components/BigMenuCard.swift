@@ -4,30 +4,29 @@ struct BigMenuCard: View {
     let emoji: String
     let title: String
     let subtitle: String
+    var compact: Bool = false
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: compact ? 12 : 16) {
             Text(emoji)
-                .font(.system(size: 44))
-            VStack(alignment: .leading, spacing: 6) {
+                .font(.system(size: compact ? 28 : 44))
+                .frame(width: compact ? 32 : 48)
+            VStack(alignment: .leading, spacing: compact ? 4 : 6) {
                 Text(title)
-                    .font(.title3.bold())
+                    .font(compact ? .headline : .title3.bold())
                     .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
                 Text(subtitle)
-                    .font(.body)
+                    .font(compact ? .caption : .body)
                     .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(Color.white.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(Color.white.opacity(0.8), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 4)
+        .padding(compact ? 14 : 20)
+        .frame(maxWidth: .infinity, minHeight: compact ? 78 : 96, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.84)))
+        .contentShape(RoundedRectangle(cornerRadius: 20))
     }
 }
