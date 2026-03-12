@@ -34,6 +34,8 @@ struct ContentView: View {
             RewardGameView()
         case .raceGame:
             RaceGameView()
+        case .tennisGame:
+            TennisGameView()
         case .settings:
             SettingsView()
         }

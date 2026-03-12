@@ -14,5 +14,6 @@ final class AppRouter: ObservableObject {
     func goToRewardGamePicker() { route = .rewardGamePicker }
     func goToRewardGame() { route = .rewardGame }
     func goToRaceGame() { route = .raceGame }
+    func goToTennisGame() { route = .tennisGame }
     func goToSettings() { route = .settings }
 }

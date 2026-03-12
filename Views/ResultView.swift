@@ -10,6 +10,7 @@ struct ResultView: View {
     @State private var showRewardPicker = false
     @State private var showStarsGame = false
     @State private var showRaceGame = false
+    @State private var showTennisGame = false
 
     private let rewardService = RewardService()
 
@@ -104,6 +105,12 @@ struct ResultView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                         showRaceGame = true
                     }
+                },
+                openTennis: {
+                    showRewardPicker = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        showTennisGame = true
+                    }
                 }
             )
         }
@@ -113,12 +120,16 @@ struct ResultView: View {
         .sheet(isPresented: $showRaceGame) {
             RaceGameView()
         }
+        .sheet(isPresented: $showTennisGame) {
+            TennisGameView()
+        }
     }
 }
 
 private struct RewardGameChoiceSheet: View {
     let openStars: () -> Void
     let openRace: () -> Void
+    let openTennis: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -148,6 +159,15 @@ private struct RewardGameChoiceSheet: View {
                             emoji: "🏎",
                             title: "Гонки",
                             subtitle: "Лови бонусы машинкой и объезжай бомбы"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: openTennis) {
+                        choiceCard(
+                            emoji: "🎾",
+                            title: "Теннис",
+                            subtitle: "Отбивай мяч и собирай бонусы"
                         )
                     }
                     .buttonStyle(.plain)

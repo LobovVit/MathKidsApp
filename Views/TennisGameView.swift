@@ -1,9 +1,9 @@
 import SwiftUI
 
-struct RaceGameView: View {
+struct TennisGameView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var router: AppRouter
-    @StateObject private var viewModel = RaceGameViewModel()
+    @StateObject private var viewModel = TennisGameViewModel()
     @State private var started = false
 
     var body: some View {
@@ -11,9 +11,9 @@ struct RaceGameView: View {
             ZStack {
                 LinearGradient(
                     gradient: Gradient(colors: [
-                        Color.blue.opacity(0.18),
-                        Color.cyan.opacity(0.10),
-                        Color.purple.opacity(0.12)
+                        Color.green.opacity(0.18),
+                        Color.blue.opacity(0.10),
+                        Color.yellow.opacity(0.08)
                     ]),
                     startPoint: .top,
                     endPoint: .bottom
@@ -30,7 +30,7 @@ struct RaceGameView: View {
 
                         Spacer()
 
-                        Text("Гонки")
+                        Text("Теннис")
                             .font(.headline)
 
                         Spacer()
@@ -43,26 +43,38 @@ struct RaceGameView: View {
                     header
 
                     ZStack {
-                        roadBackground(size: geo.size)
+                        tennisCourt(size: geo.size)
 
-                        ForEach(viewModel.items) { item in
-                            Text(item.emoji)
-                                .font(.system(size: 34))
-                                .position(x: item.x, y: item.y)
-                                .shadow(radius: 2)
+                        ForEach(viewModel.bonuses) { bonus in
+                            Text(bonus.emoji)
+                                .font(.system(size: 30))
+                                .position(x: bonus.x, y: bonus.y)
                         }
 
-                        Text("🚗")
-                            .font(.system(size: 42))
-                            .rotationEffect(.degrees(viewModel.carTilt))
-                            .position(x: viewModel.carX, y: geo.size.height - 120)
-                            .shadow(radius: 4)
+                        Circle()
+                            .fill(viewModel.bounceFlash ? Color.yellow : Color.white)
+                            .frame(width: 24, height: 24)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.black.opacity(0.15), lineWidth: 1)
+                            )
+                            .position(x: viewModel.ballX, y: viewModel.ballY)
+                            .shadow(radius: 2)
+
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.blue.opacity(0.85))
+                            .frame(width: 96, height: 16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                            )
+                            .position(x: viewModel.paddleX, y: geo.size.height - 110)
                     }
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
-                                viewModel.moveCar(to: value.location.x)
+                                viewModel.movePaddle(to: value.location.x)
                             }
                     )
                 }
@@ -90,7 +102,7 @@ struct RaceGameView: View {
 
             Spacer()
 
-            Text("🏁 \(viewModel.score)")
+            Text("🎾 \(viewModel.score)")
                 .font(.headline)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -98,50 +110,34 @@ struct RaceGameView: View {
         }
     }
 
-    private func roadBackground(size: CGSize) -> some View {
+    private func tennisCourt(size: CGSize) -> some View {
         ZStack {
-            HStack {
-                Color.green.opacity(0.28)
-                Color.green.opacity(0.28)
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.green.opacity(0.72))
+
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(Color.white.opacity(0.9), lineWidth: 4)
+
+            VStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(Color.white.opacity(0.85))
+                    .frame(height: 4)
+                Spacer()
             }
 
-            ForEach(0..<10, id: \.self) { index in
-                let segmentHeight: CGFloat = 120
-                let yBase = CGFloat(index) * segmentHeight - 40
-                let midY = yBase + (segmentHeight / 2)
-                let centerX = viewModel.roadCenter(at: midY)
-
-                RoundedRectangle(cornerRadius: 32)
-                    .fill(Color.black.opacity(0.80))
-                    .frame(width: min(size.width * 0.58, 290), height: segmentHeight + 8)
-                    .position(x: centerX, y: yBase + 70)
+            HStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(Color.white.opacity(0.85))
+                    .frame(width: 4)
+                Spacer()
             }
 
-            ForEach(0..<18, id: \.self) { index in
-                let y = CGFloat(index) * 70 - viewModel.laneScroll
-                let centerX = viewModel.roadCenter(at: y)
-
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.white.opacity(0.9))
-                    .frame(width: 8, height: 34)
-                    .position(x: centerX + viewModel.laneOffset(at: y), y: y)
-            }
-
-            ForEach(0..<14, id: \.self) { index in
-                let y = CGFloat(index) * 55
-                let centerX = viewModel.roadCenter(at: y)
-                let roadHalfWidth = min(size.width * 0.58, 290) / 2
-
-                Circle()
-                    .fill(Color.yellow.opacity(0.25))
-                    .frame(width: 8, height: 8)
-                    .position(x: centerX - roadHalfWidth - 10, y: y)
-
-                Circle()
-                    .fill(Color.yellow.opacity(0.25))
-                    .frame(width: 8, height: 8)
-                    .position(x: centerX + roadHalfWidth + 10, y: y)
-            }
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.white.opacity(0.65))
+                .frame(width: size.width * 0.78, height: 3)
+                .position(x: size.width / 2, y: size.height - 132)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
@@ -149,7 +145,7 @@ struct RaceGameView: View {
 
     private func resultOverlay(width: CGFloat, height: CGFloat) -> some View {
         VStack(spacing: 16) {
-            Text("Финиш! 🏁")
+            Text("Супер! 🎉")
                 .font(.largeTitle.bold())
 
             Text("Ты набрал: \(viewModel.score)")

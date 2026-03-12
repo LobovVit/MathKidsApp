@@ -11,5 +11,6 @@ enum AppRoute: Equatable {
     case rewardGamePicker
     case rewardGame
     case raceGame
+    case tennisGame
     case settings
 }

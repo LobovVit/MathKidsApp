@@ -61,6 +61,18 @@ struct RewardGamePickerView: View {
                         dismiss()
 #endif
                     }
+
+                    gameButton(
+                        emoji: "🎾",
+                        title: "Теннис",
+                        subtitle: "Отбивай мяч и собирай бонусы"
+                    ) {
+#if os(macOS)
+                        router.goToTennisGame()
+#else
+                        dismiss()
+#endif
+                    }
                 }
                 .frame(maxWidth: 560)
 
@@ -73,7 +85,7 @@ struct RewardGamePickerView: View {
                     }
                     .buttonStyle(.borderedProminent)
 
-                    Button("Отмена") {
+                    Button("Закрыть") {
                         dismiss()
                     }
                     .buttonStyle(.bordered)

@@ -15,13 +15,13 @@ struct RewardGameView: View {
 #if os(macOS)
                     HStack {
                         Button("← Назад") {
-                            router.goHome()
+                            router.goToRewardGamePicker()
                         }
                         .buttonStyle(.bordered)
 
                         Spacer()
 
-                        Text("Бонусная игра")
+                        Text("Поймай звёзды")
                             .font(.headline)
 
                         Spacer()
@@ -29,8 +29,6 @@ struct RewardGameView: View {
                         Color.clear.frame(width: 80, height: 1)
                     }
                     .padding(.horizontal)
-#else
-                    EmptyView()
 #endif
 
                     header
@@ -98,17 +96,22 @@ struct RewardGameView: View {
                 .foregroundColor(.secondary)
 
             HStack(spacing: 12) {
-                Button("Ещё раз") {
-                    viewModel.restart(in: width)
+#if os(macOS)
+                Button("К играм") {
+                    router.goToRewardGamePicker()
                 }
                 .buttonStyle(.borderedProminent)
 
-#if os(macOS)
                 Button("На главную") {
                     router.goHome()
                 }
                 .buttonStyle(.bordered)
 #else
+                Button("К играм") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+
                 Button("Готово") {
                     dismiss()
                 }
