@@ -22,6 +22,14 @@ final class TrainingViewModel: ObservableObject {
     @Published var selectedMultiplicationRow: Int? = nil
     @Published var selectedMultiplicationColumn: Int? = nil
 
+    @Published var divisionMode: DivisionTrainingMode = .steps
+    @Published var divisionQuotientDigits: [String] = []
+    @Published var divisionProductRows: [[String]] = []
+    @Published var divisionRemainderRows: [[String]] = []
+    @Published var divisionBringDownRows: [[String]] = []
+    @Published var selectedDivisionRow: Int? = nil
+    @Published var selectedDivisionColumn: Int? = nil
+
     let operation: MathOperation
     let answerMode: AnswerMode
     let childProfile: ChildProfile
@@ -71,6 +79,13 @@ final class TrainingViewModel: ObservableObject {
             task.operation == .multiplication
     }
 
+    var usesInteractiveColumnarDivision: Bool {
+        guard let task = currentTask else { return false }
+        return childProfile.selectedLevel == .columnar &&
+            task.presentationStyle == .columnar &&
+            task.operation == .division
+    }
+
     func submitTextAnswer(soundEnabled: Bool) {
         guard let task = currentTask else { return }
 
@@ -78,7 +93,9 @@ final class TrainingViewModel: ObservableObject {
         if usesInteractiveColumnarInput {
             userAnswer = buildColumnarAnswer()
         } else if usesInteractiveColumnarMultiplication {
-            userAnswer = buildMultiplicationAnswer(for: task)
+            userAnswer = buildMultiplicationAnswer()
+        } else if usesInteractiveColumnarDivision {
+            userAnswer = buildDivisionAnswer()
         } else {
             userAnswer = Int(answerText.trimmingCharacters(in: .whitespacesAndNewlines))
         }
@@ -127,7 +144,10 @@ final class TrainingViewModel: ObservableObject {
         switch task.operation {
         case .addition, .subtraction:
             let digitsCount = max(String(task.left).count, String(task.right).count)
-            let answerCount = task.operation == .addition ? max(digitsCount, String(task.correctAnswer).count) : digitsCount
+            let answerCount = task.operation == .addition
+                ? max(digitsCount, String(task.correctAnswer).count)
+                : digitsCount
+
             columnarAnswerDigits = Array(repeating: "", count: answerCount)
             columnarCarryDigits = Array(repeating: "", count: answerCount)
             selectedColumnIndex = answerCount - 1
@@ -145,7 +165,16 @@ final class TrainingViewModel: ObservableObject {
             selectedMultiplicationColumn = finalWidth - 1
 
         case .division:
-            break
+            let dividendDigits = String(task.left).count
+            let quotientDigits = String(task.correctAnswer).count
+            let steps = max(1, quotientDigits)
+
+            divisionQuotientDigits = Array(repeating: "", count: quotientDigits)
+            divisionProductRows = Array(repeating: Array(repeating: "", count: dividendDigits), count: steps)
+            divisionRemainderRows = Array(repeating: Array(repeating: "", count: dividendDigits), count: steps)
+            divisionBringDownRows = Array(repeating: Array(repeating: "", count: dividendDigits), count: max(0, steps - 1))
+            selectedDivisionRow = 0
+            selectedDivisionColumn = quotientDigits - 1
         }
     }
 
@@ -160,6 +189,13 @@ final class TrainingViewModel: ObservableObject {
         multiplicationResultDigits = []
         selectedMultiplicationRow = nil
         selectedMultiplicationColumn = nil
+
+        divisionQuotientDigits = []
+        divisionProductRows = []
+        divisionRemainderRows = []
+        divisionBringDownRows = []
+        selectedDivisionRow = nil
+        selectedDivisionColumn = nil
     }
 
     private func buildColumnarAnswer() -> Int? {
@@ -167,13 +203,18 @@ final class TrainingViewModel: ObservableObject {
         return joined.isEmpty ? nil : Int(joined)
     }
 
-    private func buildMultiplicationAnswer(for task: TaskItem) -> Int? {
+    private func buildMultiplicationAnswer() -> Int? {
+        guard let task = currentTask else { return nil }
         if String(task.right).count == 1 {
             let joined = multiplicationPartialRows.first?.joined().trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return joined.isEmpty ? nil : Int(joined)
         }
-
         let joined = multiplicationResultDigits.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        return joined.isEmpty ? nil : Int(joined)
+    }
+
+    private func buildDivisionAnswer() -> Int? {
+        let joined = divisionQuotientDigits.joined().trimmingCharacters(in: .whitespacesAndNewlines)
         return joined.isEmpty ? nil : Int(joined)
     }
 

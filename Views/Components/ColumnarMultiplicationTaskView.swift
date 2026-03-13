@@ -453,8 +453,10 @@ struct ColumnarMultiplicationTaskView: View {
     // MARK: - Helpers
 
     private func singleDigit(from text: String) -> String {
-        let filtered = text.filter { $0.isNumber }
-        return filtered.isEmpty ? "" : String(filtered.suffix(1))
+        guard let lastDigit = text.last(where: { $0.isNumber }) else {
+            return ""
+        }
+        return String(lastDigit)
     }
 
     private func padLeft(_ digits: [String], to count: Int) -> [String] {
