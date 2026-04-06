@@ -1,125 +1,113 @@
 import SwiftUI
 
 struct ParentDashboardView: View {
-    @EnvironmentObject private var statsStore: StatsStore
     @EnvironmentObject private var profileStore: ProfileStore
-    @EnvironmentObject private var authStore: ParentAuthStore
+    @EnvironmentObject private var statsStore: StatsStore
     @EnvironmentObject private var router: AppRouter
-    @StateObject private var viewModel = ParentDashboardViewModel()
-    @State private var newPin = ""
+
+    @State private var showPinSettings = false
+
+    private var selectedChildName: String {
+        profileStore.profile.name
+    }
+
+    private var resultsForSelectedChild: [SessionResult] {
+        statsStore.results.filter { $0.childID == profileStore.profile.id }
+    }
+
+    private var totalSessions: Int {
+        resultsForSelectedChild.count
+    }
+
+    private var totalCorrect: Int {
+        resultsForSelectedChild.reduce(0) { $0 + $1.correctAnswers }
+    }
+
+    private var totalQuestions: Int {
+        resultsForSelectedChild.reduce(0) { $0 + $1.totalQuestions }
+    }
+
+    private var accuracyText: String {
+        guard totalQuestions > 0 else { return "—" }
+        let value = Int((Double(totalCorrect) / Double(totalQuestions)) * 100)
+        return "\(value)%"
+    }
 
     var body: some View {
-        let childResults = statsStore.results(for: profileStore.selectedProfileID)
-        let chartItems = viewModel.chartItems(from: childResults)
+        ZStack {
+            KidBackgroundView()
 
-        return ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 18) {
+                    HeaderBackView(title: "Родительский экран").padding(26)
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    HeaderBackView(title: "Родительский экран")
-
-                    HStack(spacing: 12) {
-                        StatMiniCard(title: "Всего решено", value: "\(statsStore.totalSolved(for: profileStore.selectedProfileID))")
-                        StatMiniCard(title: "Точность", value: "\(Int(statsStore.accuracy(for: profileStore.selectedProfileID) * 100))%")
-                    }
-
-                    HStack(spacing: 12) {
-                        StatMiniCard(title: "Слабая тема", value: shortWeakTopic(viewModel.weakestOperation(from: childResults)))
-                        StatMiniCard(title: "Общее время", value: viewModel.totalTrainingTime(from: childResults))
-                    }
-
-                    HStack(spacing: 12) {
-                        StatMiniCard(title: "Среднее занятие", value: viewModel.averageTrainingTime(from: childResults))
-                        StatMiniCard(title: "Последнее занятие", value: viewModel.lastTrainingTime(from: childResults))
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("График прогресса")
-                            .font(.title3.bold())
-                        SimpleBarChartView(
-                            items: chartItems,
-                            maxValue: max(chartItems.map({ $0.value }).max() ?? 100, 100)
+                    VStack(spacing: 16) {
+                        dashboardCard(
+                            title: "Ребёнок",
+                            rows: [
+                                ("Имя", selectedChildName)
+                            ]
                         )
-                    }
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.78)))
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Сменить PIN")
-                            .font(.title3.bold())
-                        HStack {
-                            SecureField("Новый PIN", text: $newPin)
-                                .textFieldStyle(.roundedBorder)
-                            Button("Сохранить") {
-                                authStore.updatePin(to: newPin)
-                                newPin = ""
+                        dashboardCard(
+                            title: "Статистика",
+                            rows: [
+                                ("Занятий", "\(totalSessions)"),
+                                ("Правильных ответов", "\(totalCorrect)"),
+                                ("Всего вопросов", "\(totalQuestions)"),
+                                ("Точность", accuracyText)
+                            ]
+                        )
+
+                        VStack(spacing: 12) {
+                            Button("Изменить PIN-код") {
+                                showPinSettings = true
                             }
                             .buttonStyle(.borderedProminent)
-                        }
-                    }
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.78)))
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Последние занятия")
-                            .font(.title3.bold())
-
-                        ForEach(childResults.prefix(10)) { result in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(result.operation.title).font(.headline)
-                                    Spacer()
-                                    Text("\(Int(result.accuracy * 100))%").font(.headline)
-                                }
-                                Text("Уровень: \(result.difficulty.title)").foregroundColor(.secondary)
-                                Text("Серия: \(result.bestStreak) 🔥").foregroundColor(.secondary)
-                                Text("Время: \(formatDuration(result.duration))").foregroundColor(.secondary)
+                            Button("На главный экран") {
+                                router.goHome()
                             }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.78)))
+                            .buttonStyle(.bordered)
                         }
                     }
-
-                    Button("Заблокировать экран") {
-                        authStore.lock()
-                        router.goHome()
-                    }
-                    .buttonStyle(.bordered)
+                    .frame(maxWidth: 700)
+                    .padding(.horizontal)
                 }
-                .frame(maxWidth: 920)
-                .padding(.horizontal, 12)
                 .padding(.vertical, 16)
             }
         }
-    }
-
-    private func shortWeakTopic(_ text: String) -> String {
-        switch text {
-        case "Сложение": return "➕"
-        case "Вычитание": return "➖"
-        case "Умножение": return "✖️"
-        case "Деление": return "➗"
-        default: return "—"
+        .sheet(isPresented: $showPinSettings) {
+            ParentSettingsView()
+                .environmentObject(profileStore)
+                .environmentObject(statsStore)
+                .environmentObject(router)
         }
     }
 
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let totalSeconds = Int(duration)
-        if totalSeconds < 60 {
-            return "\(totalSeconds) сек"
+    private func dashboardCard(title: String, rows: [(String, String)]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.title3.bold())
+
+            ForEach(0..<rows.count, id: \.self) { index in
+                HStack {
+                    Text(rows[index].0)
+                    Spacer()
+                    Text(rows[index].1)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
-        let minutes = totalSeconds / 60
-        let seconds = totalSeconds % 60
-        if seconds == 0 {
-            return "\(minutes) мин"
-        } else {
-            return "\(minutes) мин \(seconds) сек"
-        }
+        .padding(20)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.white.opacity(0.9))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+        )
     }
 }

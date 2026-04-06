@@ -2,17 +2,61 @@ import Foundation
 import Combine
 
 final class AppRouter: ObservableObject {
-    @Published var route: AppRoute = .home
+    @Published var currentRoute: AppRoute = .home
 
-    func goHome() { route = .home }
-    func goToOperations() { route = .operationSelection }
-    func goToTraining(_ operation: MathOperation) { route = .training(operation) }
-    func goToProfiles() { route = .profiles }
-    func goToChildProfile() { route = .childProfile }
-    func goToParentGate() { route = .parentGate }
-    func goToParentDashboard() { route = .parentDashboard }
-    func goToRewardGamePicker() { route = .rewardGamePicker }
-    func goToRewardGame() { route = .rewardGame }
-    func goToRaceGame() { route = .raceGame }
-    func goToSettings() { route = .settings }
+    func goHome() {
+        currentRoute = .home
+    }
+
+    func goBack() {
+        currentRoute = .home
+    }
+
+    func goToOperations() {
+        currentRoute = .operationSelection
+    }
+
+    func goToTraining(_ operation: MathOperation) {
+        currentRoute = .training(operation)
+    }
+
+    func goToProfiles() {
+        currentRoute = .profiles
+    }
+
+    func goToChildProfile() {
+        currentRoute = .childProfile
+    }
+
+    func goToParentGate() {
+        currentRoute = .parentGate
+    }
+
+    func goToParentDashboard() {
+        currentRoute = .parentDashboard
+    }
+
+    func goToRewardGamePicker() {
+        currentRoute = .rewardGamePicker
+    }
+
+    func goToRewardGame() {
+        currentRoute = .rewardGame
+    }
+
+    func goToRaceGame() {
+        currentRoute = .raceGame
+    }
+
+    func goToTennisGame() {
+        currentRoute = .tennisGame
+    }
+
+    func goToBlockGarden() {
+        currentRoute = .blockGarden
+    }
+
+    func goToSettings() {
+        currentRoute = .settings
+    }
 }
