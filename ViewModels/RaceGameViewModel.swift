@@ -5,7 +5,6 @@ import CoreGraphics
 final class RaceGameViewModel: ObservableObject {
     @Published private(set) var items: [RaceItem] = []
     @Published private(set) var score: Int = 0
-    @Published private(set) var timeLeft: Int = 20
     @Published private(set) var isFinished: Bool = false
     @Published private(set) var bestScore: Int = 0
 
@@ -13,10 +12,10 @@ final class RaceGameViewModel: ObservableObject {
     @Published var roadPhase: CGFloat = 0
     @Published var laneScroll: CGFloat = 0
     @Published var carTilt: Double = 0
+    @Published private(set) var carY: CGFloat = 0
 
     private var spawnTimer: Timer?
     private var moveTimer: Timer?
-    private var gameTimer: Timer?
 
     private let bestScoreKey = "mathkids.racegame.bestscore"
     private var sceneWidth: CGFloat = 320
@@ -32,9 +31,9 @@ final class RaceGameViewModel: ObservableObject {
         sceneHeight = height
         items.removeAll()
         score = 0
-        timeLeft = 20
         isFinished = false
         carX = width / 2
+        carY = max(height - 170, height * 0.68)
         roadPhase = 0
         laneScroll = 0
         carTilt = 0
@@ -47,14 +46,6 @@ final class RaceGameViewModel: ObservableObject {
             self?.tick()
         }
 
-        gameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
-            guard let self else { return }
-            self.timeLeft -= 1
-            if self.timeLeft <= 0 {
-                timer.invalidate()
-                self.finishGame()
-            }
-        }
     }
 
     func moveCar(to x: CGFloat) {
@@ -95,7 +86,6 @@ final class RaceGameViewModel: ObservableObject {
             items[index].y += 7
         }
 
-        let carY = sceneHeight - 120
         let hitBoxX: CGFloat = 40
         let hitBoxY: CGFloat = 42
 
@@ -158,9 +148,7 @@ final class RaceGameViewModel: ObservableObject {
     private func stopAllTimers() {
         spawnTimer?.invalidate()
         moveTimer?.invalidate()
-        gameTimer?.invalidate()
         spawnTimer = nil
         moveTimer = nil
-        gameTimer = nil
     }
 }

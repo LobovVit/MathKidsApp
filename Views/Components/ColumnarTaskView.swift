@@ -5,26 +5,24 @@ struct ColumnarTaskView: View {
     let right: Int
     let operation: MathOperation
 
-    private var maxDigits: Int {
-        max(String(left).count, String(right).count)
-    }
-
-    private var lineWidth: CGFloat {
-        CGFloat(max(maxDigits, 2)) * 34 + 28
-    }
-
     var body: some View {
         VStack(alignment: .trailing, spacing: 10) {
             if operation == .division {
                 HStack(alignment: .top, spacing: 8) {
-                    Text("\(right)")
+                    Text("\(left)")
                         .font(.system(size: 42, weight: .bold, design: .monospaced))
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(") \(left)")
-                            .font(.system(size: 42, weight: .bold, design: .monospaced))
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 8) {
+                            Text("\(right)")
+                                .font(.system(size: 38, weight: .bold, design: .monospaced))
+                            Rectangle()
+                                .fill(Color.primary)
+                                .frame(width: 2, height: 40)
+                        }
                         Rectangle()
-                            .frame(width: max(lineWidth, 120), height: 3)
+                            .fill(Color.primary)
+                            .frame(width: 90, height: 2)
                     }
                 }
             } else {
@@ -39,18 +37,18 @@ struct ColumnarTaskView: View {
                 }
 
                 Rectangle()
-                    .frame(width: lineWidth, height: 3)
+                    .fill(Color.primary)
+                    .frame(width: 140, height: 3)
             }
         }
         .padding(24)
         .background(
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color.white.opacity(0.88))
+                .fill(Color.white.opacity(0.9))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24)
                 .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
-        .padding(.horizontal)
     }
 }

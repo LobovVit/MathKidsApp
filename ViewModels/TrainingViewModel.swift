@@ -40,12 +40,12 @@ final class TrainingViewModel: ObservableObject {
     init(operation: MathOperation, settings: AppSettings, childProfile: ChildProfile) {
         self.operation = operation
         self.childProfile = childProfile
-        self.answerMode = childProfile.selectedLevel == .columnar ? .input : settings.answerMode
+        self.answerMode = childProfile.selectedLevel == .columnar ? .input : childProfile.answerMode
         self.tasks = generator.generateTasks(
             operation: operation,
             level: childProfile.selectedLevel,
-            allowNegativeSubtraction: settings.allowNegativeSubtraction,
-            divisionOnlyIntegers: settings.divisionOnlyIntegers,
+            allowNegativeSubtraction: childProfile.allowNegativeSubtraction,
+            divisionOnlyIntegers: childProfile.divisionOnlyIntegers,
             answerMode: self.answerMode
         )
         setupColumnarStateIfNeeded()
@@ -231,5 +231,21 @@ final class TrainingViewModel: ObservableObject {
             bestStreak: bestStreak,
             duration: Date().timeIntervalSince(startedAt)
         )
+    }
+
+    func rewardedPlaySeconds() -> Int {
+        let correct = answers.filter { $0.isCorrect }.count
+        guard correct > 0 else { return 0 }
+
+        switch childProfile.selectedLevel {
+        case .easy:
+            return correct * 10
+        case .medium:
+            return correct * 20
+        case .hard:
+            return correct * 30
+        case .columnar:
+            return 120
+        }
     }
 }

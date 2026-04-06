@@ -5,13 +5,11 @@ import CoreGraphics
 final class RewardGameViewModel: ObservableObject {
     @Published private(set) var items: [RewardGameItem] = []
     @Published private(set) var score: Int = 0
-    @Published private(set) var timeLeft: Int = 20
     @Published private(set) var isFinished: Bool = false
     @Published private(set) var bestScore: Int = 0
 
     private var spawnTimer: Timer?
     private var moveTimer: Timer?
-    private var gameTimer: Timer?
 
     private let bestScoreKey = "mathkids.rewardgame.bestscore"
 
@@ -23,7 +21,6 @@ final class RewardGameViewModel: ObservableObject {
         stopAllTimers()
         items.removeAll()
         score = 0
-        timeLeft = 20
         isFinished = false
 
         spawnTimer = Timer.scheduledTimer(withTimeInterval: 0.75, repeats: true) { [weak self] _ in
@@ -34,14 +31,6 @@ final class RewardGameViewModel: ObservableObject {
             self?.moveItems()
         }
 
-        gameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
-            guard let self else { return }
-            self.timeLeft -= 1
-            if self.timeLeft <= 0 {
-                timer.invalidate()
-                self.finishGame()
-            }
-        }
     }
 
     func tap(item: RewardGameItem) {
@@ -105,9 +94,7 @@ final class RewardGameViewModel: ObservableObject {
     private func stopAllTimers() {
         spawnTimer?.invalidate()
         moveTimer?.invalidate()
-        gameTimer?.invalidate()
         spawnTimer = nil
         moveTimer = nil
-        gameTimer = nil
     }
 }

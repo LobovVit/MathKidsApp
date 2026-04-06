@@ -12,21 +12,17 @@ struct ColumnarDivisionTaskView: View {
     @Binding var selectedRow: Int?
     @Binding var selectedColumn: Int?
 
-    private var dividendDigits: [String] {
-        String(dividend).map { String($0) }
-    }
+    private let cellSize = CGSize(width: 26, height: 30)
+    private let quotientSize = CGSize(width: 26, height: 32)
 
-    private var divisorDigits: [String] {
-        String(divisor).map { String($0) }
-    }
+    private var dividendDigits: [String] { String(dividend).map { String($0) } }
+    private var divisorDigits: [String] { String(divisor).map { String($0) } }
+    private var quotientWidth: Int { max(1, quotientDigits.count) }
+    private var bodyWidth: CGFloat { CGFloat(max(dividendDigits.count + 3, quotientWidth + divisorDigits.count + 2)) * 30 }
 
-    private var quotientWidth: Int {
-        max(1, quotientDigits.count)
-    }
-
-    private var bodyWidth: CGFloat {
-        CGFloat(max(dividendDigits.count + 3, quotientWidth + divisorDigits.count + 2)) * 30
-    }
+    private var dividendIndexList: [Int] { Array(0..<dividendDigits.count) }
+    private var divisorIndexList: [Int] { Array(0..<divisorDigits.count) }
+    private var quotientIndexList: [Int] { Array(0..<quotientWidth) }
 
     var body: some View {
         VStack(spacing: 14) {
@@ -50,10 +46,8 @@ struct ColumnarDivisionTaskView: View {
                             .font(.headline)
                             .foregroundColor(.secondary)
                             .padding(.top, 8)
-
                     case .steps:
                         stepsBlock(showBringDown: false)
-
                     case .full:
                         stepsBlock(showBringDown: true)
                     }
@@ -61,17 +55,24 @@ struct ColumnarDivisionTaskView: View {
                 .padding(20)
             }
             .frame(maxWidth: 460)
+
+            ColumnarKeypadView(
+                digitAction: insertDigit,
+                deleteAction: deleteDigit,
+                clearAction: clearAll
+            )
         }
         .padding(.horizontal)
+        .onAppear {
+            if selectedRow == nil { selectedRow = -1 }
+            if selectedColumn == nil { selectedColumn = max(0, quotientWidth - 1) }
+        }
     }
-
-    // MARK: - Header
 
     private var divisionHeader: some View {
         HStack(alignment: .top, spacing: 0) {
-            // Делимое слева
             HStack(spacing: 4) {
-                ForEach(0..<dividendDigits.count, id: \.self) { index in
+                ForEach(dividendIndexList, id: \.self) { index in
                     Text(dividendDigits[index])
                         .font(.system(size: 32, weight: .bold, design: .monospaced))
                         .frame(width: 26, height: 34)
@@ -79,41 +80,30 @@ struct ColumnarDivisionTaskView: View {
             }
 
             ZStack(alignment: .topLeading) {
-                // Скобка деления
                 VStack(alignment: .leading, spacing: 0) {
-                    Rectangle()
-                        .fill(Color.primary)
-                        .frame(width: 2, height: 40)
-
-                    Rectangle()
-                        .fill(Color.primary)
-                        .frame(
-                            width: CGFloat(max(divisorDigits.count, quotientWidth)) * 30 + 18,
-                            height: 2
-                        )
+                    Rectangle().fill(Color.primary).frame(width: 2, height: 40)
+                    Rectangle().fill(Color.primary)
+                        .frame(width: CGFloat(max(divisorDigits.count, quotientWidth)) * 30 + 18, height: 2)
                 }
                 .offset(x: 0, y: 20)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    // сверху справа — делитель
                     HStack(spacing: 4) {
                         Color.clear.frame(width: 10, height: 1)
-
-                        ForEach(0..<divisorDigits.count, id: \.self) { index in
+                        ForEach(divisorIndexList, id: \.self) { index in
                             Text(divisorDigits[index])
                                 .font(.system(size: 30, weight: .bold, design: .monospaced))
                                 .frame(width: 26, height: 34)
                         }
                     }
 
-                    // ниже — частное
                     HStack(spacing: 4) {
                         Color.clear.frame(width: 18, height: 1)
-
-                        ForEach(0..<quotientWidth, id: \.self) { index in
+                        ForEach(quotientIndexList, id: \.self) { index in
                             quotientCell(index: index)
                         }
                     }
+                    .padding(.top, 10)
                 }
             }
             .padding(.leading, 8)
@@ -121,152 +111,132 @@ struct ColumnarDivisionTaskView: View {
     }
 
     private func quotientCell(index: Int) -> some View {
-        let isSelected = selectedRow == -1 && selectedColumn == index
+        let focused = selectedRow == -1 && selectedColumn == index
+        let style: MathCellStyle = focused ? .selected : .normal
 
-        return TextField(
-            "",
-            text: Binding(
-                get: { quotientDigits[safe: index] ?? "" },
-                set: { newValue in
-                    guard quotientDigits.indices.contains(index) else { return }
-                    quotientDigits[index] = singleDigit(from: newValue)
-                    selectedRow = -1
-                    selectedColumn = index
-                }
-            )
-        )
-        #if os(iOS)
-        .keyboardType(.numberPad)
-        #endif
-        .textFieldStyle(.plain)
-        .multilineTextAlignment(.center)
-        .font(.system(size: 28, weight: .bold, design: .monospaced))
-        .frame(width: 26, height: 32)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isSelected ? Color.green.opacity(0.22) : Color.gray.opacity(0.10))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(isSelected ? Color.green : Color.gray.opacity(0.3), lineWidth: 1)
-        )
-        .onTapGesture {
+        return cellButton(
+            value: quotientValue(index),
+            style: style,
+            width: quotientSize.width,
+            height: quotientSize.height,
+            fontSize: 28
+        ) {
             selectedRow = -1
             selectedColumn = index
         }
     }
 
-    // MARK: - Work area
-
     private func stepsBlock(showBringDown: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(0..<productRows.count, id: \.self) { step in
+        let stepList = Array(0..<productRows.count)
+
+        return VStack(alignment: .leading, spacing: 4) {
+            ForEach(stepList, id: \.self) { step in
                 if showBringDown && step < bringDownRows.count {
-                    gridRow(
-                        cells: bringDownRows[step],
-                        rowIndex: step * 3,
-                        color: .secondary
-                    )
+                    gridRow(values: bringDownRows[step], rowIndex: step * 3, color: .secondary)
                 }
-
-                gridRow(
-                    cells: productRows[step],
-                    rowIndex: step * 3 + 1,
-                    color: .primary
-                )
-
-                gridRow(
-                    cells: remainderRows[step],
-                    rowIndex: step * 3 + 2,
-                    color: .green
-                )
+                gridRow(values: productRows[step], rowIndex: step * 3 + 1, color: .primary)
+                gridRow(values: remainderRows[step], rowIndex: step * 3 + 2, color: .green)
             }
         }
         .frame(width: bodyWidth, alignment: .leading)
     }
 
-    private func gridRow(cells: [String], rowIndex: Int, color: Color) -> some View {
-        HStack(spacing: 4) {
-            ForEach(0..<max(dividendDigits.count, cells.count), id: \.self) { col in
-                editableCell(
-                    value: cells[safe: col] ?? "",
-                    rowIndex: rowIndex,
-                    col: col,
-                    color: color
-                )
-            }
-        }
-    }
+    private func gridRow(values: [String], rowIndex: Int, color: Color) -> some View {
+        let columnList = Array(0..<max(dividendDigits.count, values.count))
 
-    private func editableCell(value: String, rowIndex: Int, col: Int, color: Color) -> some View {
-        let isSelected = selectedRow == rowIndex && selectedColumn == col
-
-        return TextField(
-            "",
-            text: Binding(
-                get: { value },
-                set: { newValue in
-                    updateGrid(rowIndex: rowIndex, col: col, value: singleDigit(from: newValue))
+        return HStack(spacing: 4) {
+            ForEach(columnList, id: \.self) { col in
+                let focused = selectedRow == rowIndex && selectedColumn == col
+                let style: MathCellStyle = focused ? .selected : .normal
+                cellButton(
+                    value: valueForGrid(rowIndex: rowIndex, column: col),
+                    style: style,
+                    width: cellSize.width,
+                    height: cellSize.height,
+                    fontSize: 26
+                ) {
                     selectedRow = rowIndex
                     selectedColumn = col
                 }
-            )
-        )
-        #if os(iOS)
-        .keyboardType(.numberPad)
-        #endif
-        .textFieldStyle(.plain)
-        .multilineTextAlignment(.center)
-        .font(.system(size: 26, weight: .bold, design: .monospaced))
-        .frame(width: 26, height: 30)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(isSelected ? color.opacity(0.18) : Color.gray.opacity(0.08))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(isSelected ? color : Color.gray.opacity(0.2), lineWidth: 1)
-        )
-        .foregroundColor(color)
-        .onTapGesture {
-            selectedRow = rowIndex
-            selectedColumn = col
+            }
         }
     }
 
-    // MARK: - Grid update
+    private func cellButton(value: String, style: MathCellStyle, width: CGFloat, height: CGFloat, fontSize: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8).fill(style.backgroundColor)
+                RoundedRectangle(cornerRadius: 8).stroke(style.borderColor, lineWidth: 1.3)
+                Text(value.isEmpty ? " " : value)
+                    .font(.system(size: fontSize, weight: .bold, design: .monospaced))
+                    .foregroundColor(style.textColor)
+            }
+            .frame(width: width, height: height)
+        }
+        .buttonStyle(.plain)
+    }
 
-    private func updateGrid(rowIndex: Int, col: Int, value: String) {
+    private func insertDigit(_ digit: String) {
+        guard let row = selectedRow, let col = selectedColumn else { return }
+        if row == -1 {
+            guard quotientDigits.indices.contains(col) else { return }
+            quotientDigits[col] = digit
+            return
+        }
+        setGridValue(rowIndex: row, column: col, value: digit)
+    }
+
+    private func deleteDigit() {
+        guard let row = selectedRow, let col = selectedColumn else { return }
+        if row == -1 {
+            guard quotientDigits.indices.contains(col) else { return }
+            quotientDigits[col] = ""
+            return
+        }
+        setGridValue(rowIndex: row, column: col, value: "")
+    }
+
+    private func clearAll() {
+        for i in quotientDigits.indices { quotientDigits[i] = "" }
+        for r in productRows.indices { for c in productRows[r].indices { productRows[r][c] = "" } }
+        for r in remainderRows.indices { for c in remainderRows[r].indices { remainderRows[r][c] = "" } }
+        for r in bringDownRows.indices { for c in bringDownRows[r].indices { bringDownRows[r][c] = "" } }
+    }
+
+    private func quotientValue(_ index: Int) -> String {
+        quotientDigits.indices.contains(index) ? quotientDigits[index] : ""
+    }
+
+    private func valueForGrid(rowIndex: Int, column: Int) -> String {
+        let block = rowIndex / 3
+        let kind = rowIndex % 3
+        switch kind {
+        case 0:
+            return (bringDownRows.indices.contains(block) && bringDownRows[block].indices.contains(column)) ? bringDownRows[block][column] : ""
+        case 1:
+            return (productRows.indices.contains(block) && productRows[block].indices.contains(column)) ? productRows[block][column] : ""
+        default:
+            return (remainderRows.indices.contains(block) && remainderRows[block].indices.contains(column)) ? remainderRows[block][column] : ""
+        }
+    }
+
+    private func setGridValue(rowIndex: Int, column: Int, value: String) {
         let block = rowIndex / 3
         let kind = rowIndex % 3
 
-        if kind == 0 {
-            if bringDownRows.indices.contains(block), bringDownRows[block].indices.contains(col) {
-                bringDownRows[block][col] = value
+        switch kind {
+        case 0:
+            if bringDownRows.indices.contains(block), bringDownRows[block].indices.contains(column) {
+                bringDownRows[block][column] = value
             }
-        } else if kind == 1 {
-            if productRows.indices.contains(block), productRows[block].indices.contains(col) {
-                productRows[block][col] = value
+        case 1:
+            if productRows.indices.contains(block), productRows[block].indices.contains(column) {
+                productRows[block][column] = value
             }
-        } else {
-            if remainderRows.indices.contains(block), remainderRows[block].indices.contains(col) {
-                remainderRows[block][col] = value
+        default:
+            if remainderRows.indices.contains(block), remainderRows[block].indices.contains(column) {
+                remainderRows[block][column] = value
             }
         }
-    }
-
-    // MARK: - Helpers
-
-    private func singleDigit(from text: String) -> String {
-        guard let lastDigit = text.last(where: { $0.isNumber }) else {
-            return ""
-        }
-        return String(lastDigit)
-    }
-}
-
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
     }
 }

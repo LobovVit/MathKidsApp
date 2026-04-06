@@ -1,53 +1,80 @@
 import SwiftUI
 
 struct ProfilesView: View {
-    @EnvironmentObject var profileStore: ProfileStore
-    @EnvironmentObject var router: AppRouter
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    private var isPhoneLike: Bool { horizontalSizeClass == .compact }
+    @EnvironmentObject private var profilesStore: ProfileStore
+    @EnvironmentObject private var router: AppRouter
 
     var body: some View {
         ZStack {
             KidBackgroundView()
-            VStack(spacing: isPhoneLike ? 12 : 16) {
-                HeaderBackView(title: "Профили детей")
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 12) {
-                        ForEach(profileStore.profiles) { profile in
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack(spacing: isPhoneLike ? 12 : 16) {
-                                    Text(profile.avatar).font(.system(size: isPhoneLike ? 34 : 42))
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text(profile.name).font(.headline)
-                                        Text("Возраст: \(profile.age)").foregroundColor(.secondary)
-                                        Text("Уровень: \(profile.selectedLevel.title)").foregroundColor(.secondary)
-                                    }
-                                    Spacer()
+
+            VStack(spacing: 16) {
+                HeaderBackView(title: "Профили детей").padding(26)
+
+                Button {
+                    profilesStore.addProfile()
+                    router.goToChildProfile()
+                } label: {
+                    Label("Добавить профиль ребёнка", systemImage: "plus.circle.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding(.horizontal)
+
+                List {
+                    ForEach(profilesStore.profiles) { profile in
+                        Button {
+                            profilesStore.selectProfile(profile)
+                            router.goToChildProfile()
+                        } label: {
+                            HStack {
+                                Text(profile.avatar)
+                                    .font(.system(size: 34))
+                                VStack(alignment: .leading) {
+                                    Text(profile.name)
+                                        .font(.headline)
+                                    Text("Возраст: \(profile.age) · \(profile.selectedLevel.title)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
                                 }
-                                HStack {
-                                    if profile.id == profileStore.selectedProfileID {
-                                        Text("Активный")
-                                            .font(.caption.bold())
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 6)
-                                            .background(Capsule().fill(Color.green.opacity(0.2)))
-                                    }
-                                    Spacer()
-                                    Button("Выбрать") { profileStore.selectProfile(profile) }.buttonStyle(.bordered)
-                                    Button("Удалить", role: .destructive) { profileStore.deleteProfile(profile) }.buttonStyle(.bordered)
+                                Spacer()
+                                if profilesStore.selectedProfileID == profile.id {
+                                    Text("Активный")
+                                        .font(.caption)
+                                        .padding(6)
+                                        .background(Capsule().fill(Color.blue.opacity(0.15)))
                                 }
                             }
-                            .padding(isPhoneLike ? 14 : 18)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.84)))
                         }
-                        Button { profileStore.addProfile() } label: { Label("Добавить профиль", systemImage: "plus.circle.fill").font(.headline) }
-                            .buttonStyle(.borderedProminent)
-                        Button("Редактировать активный профиль") { router.goToChildProfile() }
-                            .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
+                        .profileDeleteActions {
+                            profilesStore.deleteProfile(profile)
+                        }
                     }
-                    .padding(.horizontal, isPhoneLike ? 14 : 20)
-                    .padding(.bottom, 20)
+                }
+                .listStyle(.insetGrouped)
+            }
+            .padding(.vertical, 8)
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func profileDeleteActions(_ action: @escaping () -> Void) -> some View {
+        if #available(iOS 15.0, *) {
+            swipeActions {
+                Button(role: .destructive, action: action) {
+                    Label("Удалить", systemImage: "trash")
+                }
+            }
+        } else {
+            contextMenu {
+                Button(action: action) {
+                    Label("Удалить", systemImage: "trash")
                 }
             }
         }

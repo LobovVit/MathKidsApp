@@ -1,32 +1,19 @@
 import SwiftUI
 
 struct RewardGamePickerView: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var profileStore: ProfileStore
+
+    private var hasPlayTime: Bool {
+        profileStore.profile.playTimeSeconds > 0
+    }
 
     var body: some View {
         ZStack {
             KidBackgroundView()
 
             VStack(spacing: 20) {
-#if os(macOS)
-                HStack {
-                    Button("← Назад") {
-                        router.goHome()
-                    }
-                    .buttonStyle(.bordered)
-
-                    Spacer()
-
-                    Text("Выбери игру")
-                        .font(.headline)
-
-                    Spacer()
-
-                    Color.clear.frame(width: 80, height: 1)
-                }
-                .padding(.horizontal)
-#endif
+                HeaderBackView(title: "Выбор игры")
 
                 Spacer()
 
@@ -37,63 +24,67 @@ struct RewardGamePickerView: View {
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
 
+                Text("Доступно времени: \(profileStore.profile.formattedPlayTime)")
+                    .font(.headline)
+                    .foregroundColor(hasPlayTime ? .primary : .secondary)
+
                 VStack(spacing: 14) {
                     gameButton(
                         emoji: "⭐️",
                         title: "Поймай звёзды",
                         subtitle: "Тапай по падающим звёздам, шарикам и конфетам"
                     ) {
-#if os(macOS)
                         router.goToRewardGame()
-#else
-                        dismiss()
-#endif
                     }
+                    .disabled(!hasPlayTime)
 
                     gameButton(
                         emoji: "🏎",
                         title: "Гонки",
                         subtitle: "Лови бонусы машинкой и объезжай бомбы"
                     ) {
-#if os(macOS)
                         router.goToRaceGame()
-#else
-                        dismiss()
-#endif
                     }
+                    .disabled(!hasPlayTime)
 
                     gameButton(
                         emoji: "🎾",
                         title: "Теннис",
                         subtitle: "Отбивай мяч и собирай бонусы"
                     ) {
-#if os(macOS)
                         router.goToTennisGame()
-#else
-                        dismiss()
-#endif
                     }
+                    .disabled(!hasPlayTime)
+
+                    gameButton(
+                        emoji: "🧱",
+                        title: "BlockGarden",
+                        subtitle: "Строй мир из блоков и сохраняй свои постройки"
+                    ) {
+                        router.goToBlockGarden()
+                    }
+                    .disabled(!hasPlayTime)
                 }
                 .frame(maxWidth: 560)
 
                 Spacer()
 
-#if !os(macOS)
                 HStack(spacing: 12) {
-                    Button("Поймай звёзды") {
-                        dismiss()
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    Button("Закрыть") {
-                        dismiss()
+                    Button("На главный экран") {
+                        router.goHome()
                     }
                     .buttonStyle(.bordered)
+
+                    Button("Поймай звёзды") {
+                        router.goToRewardGame()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!hasPlayTime)
                 }
-#endif
             }
             .padding()
         }
+        .navigationBarBackButtonHidden(true)
     }
 
     private func gameButton(
@@ -127,5 +118,6 @@ struct RewardGamePickerView: View {
             )
         }
         .buttonStyle(.plain)
+        .opacity(hasPlayTime ? 1 : 0.55)
     }
 }

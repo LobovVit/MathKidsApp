@@ -1,6 +1,6 @@
 import Foundation
 
-enum AppRoute: Equatable {
+enum AppRoute: Hashable {
     case home
     case operationSelection
     case training(MathOperation)
@@ -12,5 +12,6 @@ enum AppRoute: Equatable {
     case rewardGame
     case raceGame
     case tennisGame
+    case blockGarden
     case settings
 }

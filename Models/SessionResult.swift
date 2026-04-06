@@ -13,7 +13,18 @@ struct SessionResult: Identifiable, Codable {
     let bestStreak: Int
     let duration: TimeInterval
 
-    init(id: UUID = UUID(), date: Date = Date(), childID: UUID, childName: String, operation: MathOperation, difficulty: DifficultyLevel, totalQuestions: Int, correctAnswers: Int, answers: [SessionAnswer], bestStreak: Int, duration: TimeInterval) {
+    init(id: UUID = UUID(),
+         date: Date = Date(),
+         childID: UUID,
+         childName: String,
+         operation: MathOperation,
+         difficulty: DifficultyLevel,
+         totalQuestions: Int,
+         correctAnswers: Int,
+         answers: [SessionAnswer],
+         bestStreak: Int,
+         duration: TimeInterval)
+    {
         self.id = id
         self.date = date
         self.childID = childID

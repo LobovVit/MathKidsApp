@@ -1,3 +1,32 @@
 import SwiftUI
 
-struct ChoiceAnswerView: View { let options: [Int]; let chooseAction: (Int) -> Void; var compact: Bool = false; private var columns: [GridItem] { [GridItem(.flexible(), spacing: compact ? 12 : 16), GridItem(.flexible(), spacing: compact ? 12 : 16)] }; var body: some View { LazyVGrid(columns: columns, spacing: compact ? 12 : 16) { ForEach(options, id: \.self) { value in Button { chooseAction(value) } label: { Text("\(value)").font(.system(size: compact ? 24 : 30, weight: .bold, design: .rounded)).frame(maxWidth: .infinity, minHeight: compact ? 72 : 90).background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.84))) }.buttonStyle(PlainButtonStyle()) } }.padding(.horizontal) } }
+struct ChoiceAnswerView: View {
+    let options: [Int]
+    let chooseAction: (Int) -> Void
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 16) {
+            ForEach(options, id: \.self) { value in
+                Button {
+                    chooseAction(value)
+                } label: {
+                    Text("\(value)")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .frame(maxWidth: .infinity, minHeight: 90)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.white.opacity(0.78))
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+

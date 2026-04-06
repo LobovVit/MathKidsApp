@@ -4,21 +4,19 @@ struct TrainingView: View {
     @StateObject var viewModel: TrainingViewModel
     @EnvironmentObject private var statsStore: StatsStore
     @EnvironmentObject private var settingsStore: SettingsStore
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @EnvironmentObject private var profileStore: ProfileStore
+    @EnvironmentObject private var router: AppRouter
 
     @State private var showResult = false
     @State private var sessionResult: SessionResult?
-
-    private var isCompactWidth: Bool {
-        horizontalSizeClass == .compact
-    }
+    @State private var awardedPlaySeconds: Int = 0
 
     var body: some View {
         ZStack {
             KidBackgroundView()
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
+                VStack(spacing: 22) {
                     HeaderBackView(title: viewModel.operation.title)
 
                     if let task = viewModel.currentTask, !viewModel.finished {
@@ -36,49 +34,51 @@ struct TrainingView: View {
                                 .foregroundColor(last ? .green : .orange)
                         }
 
-                        if viewModel.usesInteractiveColumnarDivision {
-                            ColumnarDivisionTaskView(
-                                dividend: task.left,
-                                divisor: task.right,
-                                mode: $viewModel.divisionMode,
-                                quotientDigits: $viewModel.divisionQuotientDigits,
-                                productRows: $viewModel.divisionProductRows,
-                                remainderRows: $viewModel.divisionRemainderRows,
-                                bringDownRows: $viewModel.divisionBringDownRows,
-                                selectedRow: $viewModel.selectedDivisionRow,
-                                selectedColumn: $viewModel.selectedDivisionColumn
-                            )
-                        } else if viewModel.usesInteractiveColumnarMultiplication {
-                            ColumnarMultiplicationTaskView(
-                                left: task.left,
-                                right: task.right,
-                                partialRows: $viewModel.multiplicationPartialRows,
-                                partialCarryRows: $viewModel.multiplicationPartialCarryRows,
-                                carryDigits: $viewModel.multiplicationCarryDigits,
-                                resultDigits: $viewModel.multiplicationResultDigits,
-                                selectedRow: $viewModel.selectedMultiplicationRow,
-                                selectedColumn: $viewModel.selectedMultiplicationColumn
-                            )
-                        } else if viewModel.usesInteractiveColumnarInput {
-                            ColumnarInteractiveTaskView(
-                                left: task.left,
-                                right: task.right,
-                                operation: task.operation,
-                                answerDigits: $viewModel.columnarAnswerDigits,
-                                carryDigits: $viewModel.columnarCarryDigits,
-                                selectedColumn: $viewModel.selectedColumnIndex
-                            )
-                        } else if task.presentationStyle == .columnar {
-                            ColumnarTaskView(
-                                left: task.left,
-                                right: task.right,
-                                operation: task.operation
-                            )
-                        } else {
-                            Text(task.questionText)
-                                .font(.system(size: isCompactWidth ? 52 : 70, weight: .bold, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
+                        Group {
+                            if viewModel.usesInteractiveColumnarDivision {
+                                ColumnarDivisionTaskView(
+                                    dividend: task.left,
+                                    divisor: task.right,
+                                    mode: $viewModel.divisionMode,
+                                    quotientDigits: $viewModel.divisionQuotientDigits,
+                                    productRows: $viewModel.divisionProductRows,
+                                    remainderRows: $viewModel.divisionRemainderRows,
+                                    bringDownRows: $viewModel.divisionBringDownRows,
+                                    selectedRow: $viewModel.selectedDivisionRow,
+                                    selectedColumn: $viewModel.selectedDivisionColumn
+                                )
+                            } else if viewModel.usesInteractiveColumnarMultiplication {
+                                ColumnarMultiplicationTaskView(
+                                    left: task.left,
+                                    right: task.right,
+                                    partialRows: $viewModel.multiplicationPartialRows,
+                                    partialCarryRows: $viewModel.multiplicationPartialCarryRows,
+                                    carryDigits: $viewModel.multiplicationCarryDigits,
+                                    resultDigits: $viewModel.multiplicationResultDigits,
+                                    selectedRow: $viewModel.selectedMultiplicationRow,
+                                    selectedColumn: $viewModel.selectedMultiplicationColumn
+                                )
+                            } else if viewModel.usesInteractiveColumnarInput {
+                                ColumnarInteractiveTaskView(
+                                    left: task.left,
+                                    right: task.right,
+                                    operation: task.operation,
+                                    answerDigits: $viewModel.columnarAnswerDigits,
+                                    carryDigits: $viewModel.columnarCarryDigits,
+                                    selectedColumn: $viewModel.selectedColumnIndex
+                                )
+                            } else if task.presentationStyle == .columnar {
+                                ColumnarTaskView(
+                                    left: task.left,
+                                    right: task.right,
+                                    operation: task.operation
+                                )
+                            } else {
+                                Text(task.questionText)
+                                    .font(.system(size: 76, weight: .bold, design: .rounded))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
                         }
 
                         if viewModel.answerMode == .input {
@@ -104,70 +104,32 @@ struct TrainingView: View {
                                 chooseAction: { value in
                                     viewModel.submitChoiceAnswer(value, soundEnabled: settingsStore.settings.soundEnabled)
                                     finishIfNeeded()
-                                },
-                                compact: isCompactWidth
+                                }
                             )
                         }
                     }
                 }
-                .frame(maxWidth: 820)
-                .padding(.horizontal, 12)
+                .frame(maxWidth: 860)
+                .padding(.horizontal, 20)
                 .padding(.vertical, 16)
             }
         }
+        .navigationBarBackButtonHidden(true)
         .sheet(isPresented: $showResult) {
             if let sessionResult {
-                ResultView(result: sessionResult)
+                ResultView(result: sessionResult, awardedPlaySeconds: awardedPlaySeconds)
             }
         }
-    }
-
-    private func buildDivisionSteps(dividend: Int, divisor: Int) -> [DivisionStep] {
-        let digits = String(dividend).map { Int(String($0)) ?? 0 }
-        var steps: [DivisionStep] = []
-
-        var current = 0
-        var started = false
-        var quotientColumn = 0
-
-        for i in digits.indices {
-            current = current * 10 + digits[i]
-
-            if !started && current < divisor {
-                continue
-            }
-
-            started = true
-            let digit = current / divisor
-            let product = digit * divisor
-            let remainder = current - product
-            let nextDigit = i + 1 < digits.count ? digits[i + 1] : nil
-            let partialText = String(current)
-
-            let step = DivisionStep(
-                partialDividend: current,
-                quotientDigit: digit,
-                product: product,
-                remainder: remainder,
-                bringDownDigit: nextDigit,
-                quotientColumn: quotientColumn,
-                workStartColumn: i - partialText.count + 1,
-                workWidth: partialText.count
-            )
-            steps.append(step)
-
-            quotientColumn += 1
-            current = remainder
-        }
-
-        return steps
     }
 
     private func finishIfNeeded() {
         if viewModel.finished {
             let result = viewModel.buildResult()
+            let rewardSeconds = viewModel.rewardedPlaySeconds()
             sessionResult = result
+            awardedPlaySeconds = rewardSeconds
             statsStore.add(result: result)
+            profileStore.addPlaySeconds(rewardSeconds, to: result.childID)
             if settingsStore.settings.soundEnabled {
                 SoundService.shared.playReward()
             }

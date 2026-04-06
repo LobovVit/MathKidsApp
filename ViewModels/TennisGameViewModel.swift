@@ -4,11 +4,11 @@ import CoreGraphics
 
 final class TennisGameViewModel: ObservableObject {
     @Published var paddleX: CGFloat = 160
+    @Published private(set) var paddleY: CGFloat = 0
     @Published private(set) var ballX: CGFloat = 160
     @Published private(set) var ballY: CGFloat = 180
     @Published private(set) var score: Int = 0
     @Published private(set) var bestScore: Int = 0
-    @Published private(set) var timeLeft: Int = 20
     @Published private(set) var isFinished: Bool = false
     @Published private(set) var bonuses: [TennisBonusItem] = []
     @Published private(set) var bounceFlash: Bool = false
@@ -16,7 +16,6 @@ final class TennisGameViewModel: ObservableObject {
     private var vx: CGFloat = 4.5
     private var vy: CGFloat = 5.5
     private var tickTimer: Timer?
-    private var gameTimer: Timer?
     private var bonusTimer: Timer?
 
     private var sceneWidth: CGFloat = 320
@@ -32,27 +31,18 @@ final class TennisGameViewModel: ObservableObject {
         sceneWidth = width
         sceneHeight = height
         paddleX = width / 2
+        paddleY = max(height - 160, height * 0.70)
         ballX = width / 2
         ballY = height * 0.38
         vx = Bool.random() ? 4.5 : -4.5
         vy = 5.5
         score = 0
-        timeLeft = 20
         isFinished = false
         bonuses.removeAll()
         bounceFlash = false
 
         tickTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
             self?.tick()
-        }
-
-        gameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
-            guard let self else { return }
-            self.timeLeft -= 1
-            if self.timeLeft <= 0 {
-                timer.invalidate()
-                self.finishGame()
-            }
         }
 
         bonusTimer = Timer.scheduledTimer(withTimeInterval: 1.6, repeats: true) { [weak self] _ in
@@ -77,18 +67,23 @@ final class TennisGameViewModel: ObservableObject {
     private func tick() {
         guard !isFinished else { return }
 
+        let ballRadius: CGFloat = 12
         ballX += vx
         ballY += vy
 
-        if ballX <= 18 || ballX >= sceneWidth - 18 {
-            vx *= -1
+        if ballX <= ballRadius {
+            ballX = ballRadius
+            vx = abs(vx)
+        } else if ballX >= sceneWidth - ballRadius {
+            ballX = sceneWidth - ballRadius
+            vx = -abs(vx)
         }
 
-        if ballY <= 18 {
+        if ballY <= ballRadius {
+            ballY = ballRadius
             vy = abs(vy)
         }
 
-        let paddleY = sceneHeight - 110
         let paddleHalfWidth: CGFloat = 46
         let paddleHeight: CGFloat = 16
 
@@ -119,9 +114,9 @@ final class TennisGameViewModel: ObservableObject {
         }
 
         for bonus in bonuses {
-            let dx = abs(bonus.x - ballX)
-            let dy = abs(bonus.y - ballY)
-            if dx < 28 && dy < 28 {
+            let dx = abs(bonus.x - paddleX)
+            let dy = abs(bonus.y - paddleY)
+            if dx < (paddleHalfWidth + 18) && dy < 26 {
                 score += bonus.points
                 if score > bestScore {
                     bestScore = score
@@ -155,10 +150,8 @@ final class TennisGameViewModel: ObservableObject {
 
     private func stopAllTimers() {
         tickTimer?.invalidate()
-        gameTimer?.invalidate()
         bonusTimer?.invalidate()
         tickTimer = nil
-        gameTimer = nil
         bonusTimer = nil
     }
 }

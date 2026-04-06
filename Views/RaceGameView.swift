@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct RaceGameView: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var profileStore: ProfileStore
     @StateObject private var viewModel = RaceGameViewModel()
+    @StateObject private var playTimeSession = PlayTimeSession()
     @State private var started = false
 
     var body: some View {
@@ -21,26 +22,13 @@ struct RaceGameView: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 14) {
-#if os(macOS)
-                    HStack {
-                        Button("← Назад") {
-                            router.goToRewardGamePicker()
-                        }
-                        .buttonStyle(.bordered)
-
-                        Spacer()
-
-                        Text("Гонки")
-                            .font(.headline)
-
-                        Spacer()
-
-                        Color.clear.frame(width: 80, height: 1)
-                    }
-                    .padding(.horizontal)
-#endif
-
-                    header
+                    BonusGameHeaderBar(
+                        title: "Гонки",
+                        scoreTitle: "🏁",
+                        scoreValue: "\(viewModel.score)",
+                        timeValue: playTimeSession.formattedTime,
+                        backAction: { router.goToRewardGamePicker() }
+                    )
 
                     ZStack {
                         roadBackground(size: geo.size)
@@ -55,7 +43,7 @@ struct RaceGameView: View {
                         Text("🚗")
                             .font(.system(size: 42))
                             .rotationEffect(.degrees(viewModel.carTilt))
-                            .position(x: viewModel.carX, y: geo.size.height - 120)
+                            .position(x: viewModel.carX, y: viewModel.carY)
                             .shadow(radius: 4)
                     }
                     .contentShape(Rectangle())
@@ -69,32 +57,28 @@ struct RaceGameView: View {
                 .padding()
 
                 if viewModel.isFinished {
-                    resultOverlay(width: geo.size.width, height: geo.size.height)
+                    BonusGameResultCard(
+                        title: "Финиш! 🏁",
+                        scoreText: "Ты набрал: \(viewModel.score)",
+                        bestScoreText: "Лучший результат: \(viewModel.bestScore)",
+                        primaryTitle: "К играм",
+                        primaryAction: { router.goToRewardGamePicker() },
+                        secondaryTitle: "На главную",
+                        secondaryAction: { router.goHome() }
+                    )
                 }
             }
             .onAppear {
                 guard !started else { return }
                 started = true
                 viewModel.start(in: geo.size.width, height: geo.size.height)
+                playTimeSession.start(profileStore: profileStore) {
+                    router.goHome()
+                }
             }
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            Text("⏰ \(viewModel.timeLeft) сек")
-                .font(.headline)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Capsule().fill(Color.white.opacity(0.88)))
-
-            Spacer()
-
-            Text("🏁 \(viewModel.score)")
-                .font(.headline)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Capsule().fill(Color.white.opacity(0.88)))
+            .onDisappear {
+                playTimeSession.stop()
+            }
         }
     }
 
@@ -105,7 +89,7 @@ struct RaceGameView: View {
                 Color.green.opacity(0.28)
             }
 
-            ForEach(0..<10, id: \.self) { index in
+            ForEach(Array(0..<10), id: \.self) { index in
                 let segmentHeight: CGFloat = 120
                 let yBase = CGFloat(index) * segmentHeight - 40
                 let midY = yBase + (segmentHeight / 2)
@@ -117,7 +101,7 @@ struct RaceGameView: View {
                     .position(x: centerX, y: yBase + 70)
             }
 
-            ForEach(0..<18, id: \.self) { index in
+            ForEach(Array(0..<18), id: \.self) { index in
                 let y = CGFloat(index) * 70 - viewModel.laneScroll
                 let centerX = viewModel.roadCenter(at: y)
 
@@ -127,7 +111,7 @@ struct RaceGameView: View {
                     .position(x: centerX + viewModel.laneOffset(at: y), y: y)
             }
 
-            ForEach(0..<14, id: \.self) { index in
+            ForEach(Array(0..<14), id: \.self) { index in
                 let y = CGFloat(index) * 55
                 let centerX = viewModel.roadCenter(at: y)
                 let roadHalfWidth = min(size.width * 0.58, 290) / 2
@@ -145,49 +129,5 @@ struct RaceGameView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-    }
-
-    private func resultOverlay(width: CGFloat, height: CGFloat) -> some View {
-        VStack(spacing: 16) {
-            Text("Финиш! 🏁")
-                .font(.largeTitle.bold())
-
-            Text("Ты набрал: \(viewModel.score)")
-                .font(.title2.bold())
-
-            Text("Лучший результат: \(viewModel.bestScore)")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            HStack(spacing: 12) {
-#if os(macOS)
-                Button("К играм") {
-                    router.goToRewardGamePicker()
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button("На главную") {
-                    router.goHome()
-                }
-                .buttonStyle(.bordered)
-#else
-                Button("К играм") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button("Готово") {
-                    dismiss()
-                }
-                .buttonStyle(.bordered)
-#endif
-            }
-        }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color.white.opacity(0.94))
-        )
-        .padding()
     }
 }

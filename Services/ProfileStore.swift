@@ -39,7 +39,15 @@ final class ProfileStore: ObservableObject {
     }
 
     func addProfile() {
-        let newProfile = ChildProfile(name: "Новый ребёнок", age: 6, avatar: "🐼", selectedLevel: .easy)
+        let newProfile = ChildProfile(
+            name: "Новый ребёнок",
+            age: 6,
+            avatar: "🐼",
+            selectedLevel: .easy,
+            answerMode: .multipleChoice,
+            divisionOnlyIntegers: true,
+            allowNegativeSubtraction: false
+        )
         profiles.append(newProfile)
         selectedProfileID = newProfile.id
     }
@@ -54,6 +62,25 @@ final class ProfileStore: ObservableObject {
 
     func selectProfile(_ profile: ChildProfile) {
         selectedProfileID = profile.id
+    }
+
+    func addPlaySeconds(_ seconds: Int, to profileID: UUID? = nil) {
+        guard seconds > 0 else { return }
+        let targetID = profileID ?? selectedProfileID
+        guard let id = targetID,
+              let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].playTimeSeconds += seconds
+    }
+
+    @discardableResult
+    func consumePlaySeconds(_ seconds: Int, from profileID: UUID? = nil) -> Int {
+        guard seconds > 0 else { return profile.playTimeSeconds }
+        let targetID = profileID ?? selectedProfileID
+        guard let id = targetID,
+              let index = profiles.firstIndex(where: { $0.id == id }) else { return 0 }
+
+        profiles[index].playTimeSeconds = max(0, profiles[index].playTimeSeconds - seconds)
+        return profiles[index].playTimeSeconds
     }
 
     private func save() {

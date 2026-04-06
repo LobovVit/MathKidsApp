@@ -1,27 +1,62 @@
 import SwiftUI
 
 struct ParentPinGateView: View {
-    @EnvironmentObject var authStore: ParentAuthStore
-    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject private var settingsStore: SettingsStore
+    @EnvironmentObject private var router: AppRouter
+    @State private var pin: String = ""
+    @State private var showError: Bool = false
 
     var body: some View {
         ZStack {
             KidBackgroundView()
-            VStack(spacing: 20) {
-                HeaderBackView(title: "Родительский доступ")
-                Text("Введите PIN").font(.largeTitle.bold())
-                SecureField("PIN", text: $authStore.enteredPin)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(maxWidth: 220)
-                if let error = authStore.errorMessage { Text(error).foregroundColor(.red) }
-                Button("Открыть") {
-                    authStore.unlock()
-                    if authStore.isUnlocked { router.goToParentDashboard() }
+
+            VStack(spacing: 18) {
+                HeaderBackView(title: "Родительский доступ2").padding(26)
+
+                ParentPinCard(
+                    title: "Введите PIN",
+                    subtitle: "После ввода верного PIN откроется родительская панель."
+                ) {
+                    PinDotsView(pin: pin)
+
+                    if showError {
+                        Text("Неверный PIN-код")
+                            .foregroundColor(.red)
+                            .font(.subheadline.weight(.semibold))
+                    }
+
+                    PinKeypadView(
+                        digitAction: appendDigit,
+                        deleteAction: removeDigit
+                    )
+
+                    Button("Открыть") {
+                        if pin == settingsStore.settings.parentPin {
+                            router.goToParentDashboard()
+                        } else {
+                            pin = ""
+                            showError = true
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(pin.count != 4)
                 }
-                .buttonStyle(.borderedProminent)
-                Text("PIN по умолчанию: 0000").font(.caption).foregroundColor(.secondary)
             }
             .padding()
         }
+        
+    }
+
+    private func appendDigit(_ digit: String) {
+        guard pin.count < 4 else { return }
+        pin += digit
+        showError = false
+    }
+
+    private func removeDigit() {
+        guard !pin.isEmpty else { return }
+        pin.removeLast()
+        showError = false
     }
 }
